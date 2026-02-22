@@ -1,3 +1,5 @@
+const authMiddleware = require('./middleware/authMiddleware');
+const { isAdmin, isApprovedSeller } = require('./middleware/roleMiddleware');
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -27,7 +29,7 @@ app.get('/api/test-book', (req, res) => {
 });
 
 // GET ROUTE: Fetch all books
-app.get('/api/books', async (req, res) => {
+app.get('/api/books' , async (req, res) => {
     try {
         const books = await Book.find();
         res.status(200).json(books);
@@ -37,17 +39,23 @@ app.get('/api/books', async (req, res) => {
 });
 
 // POST ROUTE: Create a New Listing
-app.post('/api/books', async (req, res) => {
+// POST ROUTE: Add a new book (PROTECTED BY AUTH MIDDLEWARE)
+app.post('/api/books', authMiddleware, isApprovedSeller, async (req, res) => {
     try {
-        const newBook = new Book(req.body); 
-        const savedBook = await newBook.save(); 
-        res.status(201).json(savedBook); 
+        // We now extract the data from the frontend, PLUS we automatically 
+        // add the seller ID from the verified token!
+        const newBook = new Book({
+            ...req.body,
+            seller: req.user.id // This comes directly from our Bouncer!
+        });
+        
+        await newBook.save();
+        res.status(201).json(newBook);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 });
 
-// 3. START SERVER (Always at the very bottom)
 app.listen(PORT, () => {
     console.log(`🚀 Shelv Server is running on http://localhost:${PORT}`);
 });
