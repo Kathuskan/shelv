@@ -1,50 +1,43 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import AddBook from './AddBook'; // Importing your new form!
 import './App.css';
 
-function App() {
-  // 1. State: Think of this as a variable that updates the UI automatically when changed
+// 1. The "Home" Component (Your existing library view)
+function Home() {
   const [books, setBooks] = useState([]);
-
-  // 2. Effect: This runs once when the page loads (like a constructor)
-  useEffect(() => {
-    axios.get('http://localhost:5001/api/books')
-      .then(response => {
-        console.log("Data fetched:", response.data);
-        setBooks(response.data); // Update the state with data from MongoDB
-      })
-      .catch(error => console.error("Error fetching books:", error));
-  }, []);
-function App() {
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true); // New state: Start as "true"
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     axios.get('http://localhost:5001/api/books')
       .then(response => {
         setBooks(response.data);
-        setLoading(false); // Turn off loading when data arrives
+        setLoading(false);
       })
       .catch(error => {
-        console.error("Error:", error);
-        setLoading(false); // Stop loading even if there is an error
+        console.error("Error fetching books:", error);
+        setLoading(false);
       });
   }, []);
 
   return (
-    <div className="container">
-      <h1>📚 Shelv Library</h1>
-      
-      {/* Conditional Rendering: Only show this if loading is true */}
+    <div>
+      <h2>Current Inventory</h2>
       {loading ? (
         <p>Loading your library...</p>
       ) : (
         <div className="book-grid">
           {books.map((book) => (
-             /* ... your existing book card code ... */
-             <div key={book._id} className="book-card">
-                {/* ... */}
-             </div>
+            <div key={book._id} className="book-card">
+              <h3>{book.title}</h3>
+              <p><strong>Author:</strong> {book.author}</p>
+              <p><strong>Type:</strong> {book.listingType} ({book.condition})</p>
+              <p><strong>Price:</strong> ${book.price}</p>
+              <button>
+                {book.listingType === 'Rent' ? 'Rent Now' : 'Buy Now'}
+              </button>
+            </div>
           ))}
         </div>
       )}
@@ -52,24 +45,27 @@ function App() {
   );
 }
 
+// 2. The Main App Component with Routing
+function App() {
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>📚 Shelv Library</h1>
-      <p>Connecting React to MongoDB...</p>
+    <BrowserRouter>
+      <div className="container">
+        
+        {/* Navigation Bar: This stays on screen at all times */}
+        <nav style={{ display: 'flex', gap: '20px', marginBottom: '30px', paddingBottom: '20px', borderBottom: '1px solid #444' }}>
+          <h1 style={{ margin: 0, color: '#F9F9F9' }}>📚 Shelv</h1>
+          <Link to="/" style={{ textDecoration: 'none', color: '#515ADA', fontWeight: 'bold', alignSelf: 'center' }}>Home</Link>
+          <Link to="/add-book" style={{ textDecoration: 'none', color: '#515ADA', fontWeight: 'bold', alignSelf: 'center' }}>+ Add Book</Link>
+        </nav>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-        {books.map((book) => (
-          <div key={book._id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px' }}>
-            <h3>{book.title}</h3>
-            <p><strong>Author:</strong> {book.author}</p>
-            <p><strong>Price:</strong> ${book.price}</p>
-            <button style={{ backgroundColor: '#515ADA', color: 'white' }}>
-              {book.listingType === 'Rent' ? 'Rent Now' : 'Buy Now'}
-            </button>
-          </div>
-        ))}
+        {/* Routes: This is the dynamic area that changes based on the URL */}
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/add-book" element={<AddBook />} />
+        </Routes>
+        
       </div>
-    </div>
+    </BrowserRouter>
   );
 }
 
