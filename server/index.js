@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const Book = require('./models/book'); 
+const authRoutes = require('./routes/auth'); 
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -17,6 +18,8 @@ mongoose.connect(process.env.MONGO_URI)
   .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
 // 2. ROUTES (Define these BEFORE app.listen)
+// Auth Routes
+app.use('/api/auth', authRoutes);
 
 // Test Route
 app.get('/api/test-book', (req, res) => {

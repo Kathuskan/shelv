@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import AddBook from './AddBook'; 
+import AddBook from './AddBook';
+import Login from './Login';
 // Note: We removed import './App.css' because Tailwind handles all our styling now!
 
 // 1. The "Home" Component (Now styled with Tailwind)
@@ -50,7 +51,7 @@ function Home() {
                 <h3 className="text-xl font-bold text-gray-900 mb-1 leading-tight">{book.title}</h3>
                 <p className="text-gray-500 text-sm mb-4">by {book.author}</p>
               </div>
-              
+
               <div className="mt-auto pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between">
                   <span className="text-2xl font-extrabold text-indigo-600">${book.price}</span>
@@ -68,26 +69,51 @@ function Home() {
 }
 
 // 2. The Main App Component with Routing
+// 2. The Main App Component with Routing
 function App() {
+  // Check if a user is currently logged in by looking in local storage
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/'; // Refresh and go home
+  };
+
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-        
-        {/* Tailwind Navigation Bar */}
+
+        {/* Smart Tailwind Navigation Bar */}
         <nav className="flex items-center justify-between bg-white shadow-md px-8 py-4 mb-8 border-b border-gray-200">
           <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">📚 Shelv</h1>
-          <div className="flex gap-6">
-            <Link to="/" className="text-indigo-600 font-semibold hover:text-indigo-800 transition-colors flex items-center">Home</Link>
-            <Link to="/add-book" className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg">+ Add Book</Link>
+          
+          <div className="flex gap-6 items-center">
+            <Link to="/" className="text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">Home</Link>
+            
+            {/* Conditional Rendering: Only show these if a user IS logged in */}
+            {user ? (
+              <>
+                <Link to="/add-book" className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg">+ Add Book</Link>
+                <div className="ml-4 border-l pl-6 border-gray-300 flex items-center gap-4">
+                  <span className="text-sm font-medium text-gray-500">Hi, {user.name.split(' ')[0]}</span>
+                  <button onClick={handleLogout} className="text-red-600 font-semibold hover:text-red-800 transition-colors">Logout</button>
+                </div>
+              </>
+            ) : (
+              /* If NO user is logged in, show the login link */
+              <Link to="/login" className="text-gray-600 font-semibold hover:text-gray-900 transition-colors ml-4 border-l pl-6 border-gray-300">Log In</Link>
+            )}
           </div>
         </nav>
 
         {/* Routes */}
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/add-book" element={<AddBook />} /> {/* Don't forget to update your AddBook.jsx file with the Tailwind code I gave earlier too! */}
+          <Route path="/add-book" element={<AddBook />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
-        
+
       </div>
     </BrowserRouter>
   );
