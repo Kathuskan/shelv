@@ -3,9 +3,9 @@ import axios from 'axios';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import AddBook from './AddBook';
 import Login from './Login';
-// Note: We removed import './App.css' because Tailwind handles all our styling now!
+import Admin from './Admin';
 
-// 1. The "Home" Component (Now styled with Tailwind)
+// 1. The Home Component (Re-inserted)
 function Home() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,15 +51,7 @@ function Home() {
                 <h3 className="text-xl font-bold text-gray-900 mb-1 leading-tight">{book.title}</h3>
                 <p className="text-gray-500 text-sm mb-4">by {book.author}</p>
               </div>
-
-              <div className="mt-auto pt-4 border-t border-gray-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-extrabold text-indigo-600">${book.price}</span>
-                  <button className="bg-gray-900 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-                    {book.listingType === 'Rent' ? 'Rent' : 'Buy'}
-                  </button>
-                </div>
-              </div>
+              <div className="mt-auto pt-4 border-t border-gray-100 text-2xl font-extrabold text-indigo-600">${book.price}</div>
             </div>
           ))}
         </div>
@@ -68,52 +60,72 @@ function Home() {
   );
 }
 
-// 2. The Main App Component with Routing
-// 2. The Main App Component with Routing
+// 2. The Main App Component
 function App() {
-  // Check if a user is currently logged in by looking in local storage
   const user = JSON.parse(localStorage.getItem('user'));
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/'; // Refresh and go home
+    window.location.href = '/'; 
+  };
+
+  const requestSellerAccount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put('http://localhost:5001/api/auth/request-seller', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("Application submitted!");
+      const updatedUser = { ...user, status: 'pending' };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      window.location.reload(); 
+    } catch (err) {
+      alert("Failed to submit request.");
+    }
   };
 
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-
-        {/* Smart Tailwind Navigation Bar */}
         <nav className="flex items-center justify-between bg-white shadow-md px-8 py-4 mb-8 border-b border-gray-200">
-          <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">📚 Shelv</h1>
+          <Link to="/"><h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">📚 Shelv</h1></Link>
           
           <div className="flex gap-6 items-center">
             <Link to="/" className="text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">Home</Link>
             
-            {/* Conditional Rendering: Only show these if a user IS logged in */}
             {user ? (
               <>
-                <Link to="/add-book" className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg">+ Add Book</Link>
+                {/* SAFE CHECK using ?. and checking roles */}
+                {(user?.role === 'admin' || (user?.role === 'seller' && user?.status === 'approved')) && (
+                  <Link to="/add-book" className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition-all">+ Add Book</Link>
+                )}
+
                 <div className="ml-4 border-l pl-6 border-gray-300 flex items-center gap-4">
-                  <span className="text-sm font-medium text-gray-500">Hi, {user.name.split(' ')[0]}</span>
-                  <button onClick={handleLogout} className="text-red-600 font-semibold hover:text-red-800 transition-colors">Logout</button>
+                  <div className="flex flex-col items-end">
+                    <span className="text-sm font-medium text-gray-900">Hi, {user.name?.split(' ')[0]}</span>
+                    
+                    {user.status === 'none' && user.role !== 'admin' && (
+                      <button onClick={requestSellerAccount} className="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded mt-1">Become a Seller</button>
+                    )}
+                    {user.status === 'pending' && <span className="text-[10px] text-amber-600 font-bold italic">Pending...</span>}
+                    {user.role === 'admin' && <Link to="/admin" className="text-[10px] text-red-600 font-bold">Admin Panel</Link>}
+                  </div>
+                  <button onClick={handleLogout} className="text-red-600 font-semibold hover:text-red-800">Logout</button>
                 </div>
               </>
             ) : (
-              /* If NO user is logged in, show the login link */
               <Link to="/login" className="text-gray-600 font-semibold hover:text-gray-900 transition-colors ml-4 border-l pl-6 border-gray-300">Log In</Link>
             )}
           </div>
         </nav>
 
-        {/* Routes */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/add-book" element={<AddBook />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
-
       </div>
     </BrowserRouter>
   );
