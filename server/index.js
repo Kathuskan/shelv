@@ -169,6 +169,27 @@ app.delete('/api/seller/books/:id', authMiddleware, isApprovedSeller, async (req
     }
 });
 
+// SELLER ROUTE: Edit their own book
+app.put('/api/seller/books/:id', authMiddleware, isApprovedSeller, async (req, res) => {
+    try {
+        // findOneAndUpdate looks for the exact book ID AND the exact seller ID
+        const updatedBook = await Book.findOneAndUpdate(
+            { _id: req.params.id, seller: req.user.id },
+            req.body, // The new data from the frontend
+            { new: true } // Returns the updated document
+        );
+
+        if (!updatedBook) {
+            return res.status(404).json({ message: "Book not found or unauthorized to edit." });
+        }
+
+        res.status(200).json(updatedBook);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+
 app.listen(PORT, () => {
     console.log(`🚀 Shelv Server is running on http://localhost:${PORT}`);
 });
