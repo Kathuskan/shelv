@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import AddBook from './AddBook';
 import Login from './Login';
 import Admin from './Admin';
+import Register from './Register';
 
 // 1. The Home Component (Re-inserted)
 function Home() {
@@ -115,7 +116,11 @@ function App() {
                 </div>
               </>
             ) : (
-              <Link to="/login" className="text-gray-600 font-semibold hover:text-gray-900 transition-colors ml-4 border-l pl-6 border-gray-300">Log In</Link>
+              /* IF NO USER IS LOGGED IN: Show both Login and Sign Up */
+              <div className="flex items-center gap-4 ml-4 border-l pl-6 border-gray-300">
+                <Link to="/login" className="text-gray-600 font-semibold hover:text-gray-900 transition-colors">Log In</Link>
+                <Link to="/register" className="bg-gray-900 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-800 transition-all shadow-md">Sign Up</Link>
+              </div>
             )}
           </div>
         </nav>
@@ -124,6 +129,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/add-book" element={<AddBook />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
       </div>

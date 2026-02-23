@@ -6,25 +6,26 @@ const User = require('../models/user'); // Ensure this path matches your file st
 const router = express.Router();
 
 // 1. REGISTER ROUTE
+// 1. REGISTER ROUTE
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        // We now extract 'applySeller' from the frontend request
+        const { name, email, password, applySeller } = req.body;
 
-        // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "Email already in use" });
         }
 
-        // Hash the password (Data Security!)
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create the new user
+        // If applySeller is true, set status to 'pending', otherwise 'none'
         const newUser = new User({
             name,
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            sellerStatus: applySeller ? 'pending' : 'none'
         });
 
         await newUser.save();
