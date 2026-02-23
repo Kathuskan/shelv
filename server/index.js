@@ -85,6 +85,67 @@ app.put('/api/admin/approve-seller/:id', authMiddleware, isAdmin, async (req, re
         res.status(500).json({ message: err.message });
     }
 });
+// ADMIN: Reject a pending seller request
+app.put('/api/admin/reject-seller/:id', authMiddleware, isAdmin, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).send("User not found");
+
+        user.sellerStatus = 'none'; // Send them back to square one
+        await user.save();
+        res.json({ message: "Seller request rejected." });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// ADMIN: Fetch ALL users for the master table
+app.get('/api/admin/users', authMiddleware, isAdmin, async (req, res) => {
+    try {
+        // Find everyone except other admins (to prevent accidentally banning yourself!)
+        const users = await User.find({ role: { $ne: 'admin' } }).select('-password');
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// ADMIN: Restrict/Ban a user from selling
+app.put('/api/admin/restrict-user/:id', authMiddleware, isAdmin, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).send("User not found");
+
+        user.role = 'user'; // Strip their seller role
+        user.sellerStatus = 'restricted'; // Mark them as restricted
+        await user.save();
+        res.json({ message: "User has been restricted." });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// PUT ROUTE: User requests to become a seller
+app.put('/api/auth/request-seller', authMiddleware, async (req, res) => {
+    try {
+        // Find the user making the request using their verified token ID
+        const user = await User.findById(req.user.id);
+        
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Update their status
+        user.sellerStatus = 'pending';
+        await user.save();
+        
+        res.status(200).json({ message: "Request sent successfully!" });
+    } catch (err) {
+        console.error("Seller Request Error:", err);
+        res.status(500).json({ message: "Server error while processing request." });
+    }
+});
+
 
 app.listen(PORT, () => {
     console.log(`🚀 Shelv Server is running on http://localhost:${PORT}`);

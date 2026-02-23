@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import AddBook from './AddBook';
 import Login from './Login';
 import Admin from './Admin';
 import Register from './Register';
 
-// 1. The Home Component (Re-inserted)
+// 1. The Home Component
 function Home() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,10 +65,13 @@ function Home() {
 function App() {
   const user = JSON.parse(localStorage.getItem('user'));
 
+  // THE DIAGNOSTIC LOG
+  console.log("Current User from Storage:", user);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/'; 
+    window.location.href = '/';
   };
 
   const requestSellerAccount = async () => {
@@ -78,9 +81,10 @@ function App() {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert("Application submitted!");
-      const updatedUser = { ...user, status: 'pending' };
+      // Updated this line to use sellerStatus
+      const updatedUser = { ...user, sellerStatus: 'pending' };
       localStorage.setItem('user', JSON.stringify(updatedUser));
-      window.location.reload(); 
+      window.location.reload();
     } catch (err) {
       alert("Failed to submit request.");
     }
@@ -91,32 +95,34 @@ function App() {
       <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
         <nav className="flex items-center justify-between bg-white shadow-md px-8 py-4 mb-8 border-b border-gray-200">
           <Link to="/"><h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">📚 Shelv</h1></Link>
-          
+
           <div className="flex gap-6 items-center">
             <Link to="/" className="text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">Home</Link>
-            
+
             {user ? (
               <>
-                {/* SAFE CHECK using ?. and checking roles */}
-                {(user?.role === 'admin' || (user?.role === 'seller' && user?.status === 'approved')) && (
+                {/* FIXED: Check sellerStatus specifically */}
+                {(user?.role === 'admin' || (user?.role === 'seller' && user?.sellerStatus === 'approved')) && (
                   <Link to="/add-book" className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition-all">+ Add Book</Link>
                 )}
 
                 <div className="ml-4 border-l pl-6 border-gray-300 flex items-center gap-4">
                   <div className="flex flex-col items-end">
                     <span className="text-sm font-medium text-gray-900">Hi, {user.name?.split(' ')[0]}</span>
-                    
-                    {user.status === 'none' && user.role !== 'admin' && (
+
+                    {/* PASTE THIS TRUTH SERUM LINE: */}
+                    {/* <div className="text-xs font-mono bg-red-500 text-white px-2 py-1 mt-1 rounded">DEBUG ROLE: "{user?.role}"</div> */}
+                    {/* FIXED: Check sellerStatus specifically */}
+                    {user?.sellerStatus === 'none' && user?.role !== 'admin' && (
                       <button onClick={requestSellerAccount} className="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded mt-1">Become a Seller</button>
                     )}
-                    {user.status === 'pending' && <span className="text-[10px] text-amber-600 font-bold italic">Pending...</span>}
-                    {user.role === 'admin' && <Link to="/admin" className="text-[10px] text-red-600 font-bold">Admin Panel</Link>}
+                    {user?.sellerStatus === 'pending' && <span className="text-[10px] text-amber-600 font-bold italic">Pending...</span>}
+                    {user?.role === 'admin' && <Link to="/admin" className="text-[10px] text-red-600 font-bold">Admin Panel</Link>}
                   </div>
                   <button onClick={handleLogout} className="text-red-600 font-semibold hover:text-red-800">Logout</button>
                 </div>
               </>
             ) : (
-              /* IF NO USER IS LOGGED IN: Show both Login and Sign Up */
               <div className="flex items-center gap-4 ml-4 border-l pl-6 border-gray-300">
                 <Link to="/login" className="text-gray-600 font-semibold hover:text-gray-900 transition-colors">Log In</Link>
                 <Link to="/register" className="bg-gray-900 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-800 transition-all shadow-md">Sign Up</Link>
@@ -127,10 +133,26 @@ function App() {
 
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/add-book" element={<AddBook />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/admin" element={<Admin />} />
+
+          <Route
+            path="/add-book"
+            element={
+              (user?.role === 'admin' || (user?.role === 'seller' && user?.sellerStatus === 'approved'))
+                ? <AddBook />
+                : <Navigate to="/" replace />
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              user?.role === 'admin'
+                ? <Admin />
+                : <Navigate to="/" replace />
+            }
+          />
         </Routes>
       </div>
     </BrowserRouter>

@@ -61,9 +61,15 @@ router.post('/login', async (req, res) => {
         );
 
         // Send the token and user data back to the React frontend
-        res.status(200).json({ 
-            token, 
-            user: { id: user._id, name: user.name, role: user.role, status: user.sellerStatus } 
+        res.json({
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,              // <--- THIS IS CRITICAL
+                sellerStatus: user.sellerStatus // <--- SO IS THIS
+            }
         });
 
     } catch (err) {
