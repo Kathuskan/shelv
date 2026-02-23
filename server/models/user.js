@@ -23,7 +23,9 @@ const userSchema = new mongoose.Schema({
         type: String, 
         enum: ['none', 'pending', 'approved', 'restricted'], 
         default: 'none' 
-    }
+    },
+    sellerPhone: { type: String, default: "" },
+    verificationCode: { type: String, default: "" }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

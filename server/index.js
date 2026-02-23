@@ -203,6 +203,63 @@ app.get('/api/books/:id', async (req, res) => {
     }
 });
 
+// 1. GENERATE AND SEND OTP
+app.post('/api/auth/send-otp', authMiddleware, async (req, res) => {
+    try {
+        const { phone } = req.body;
+        // Generate a random 6-digit code
+        const otp = Math.floor(100000 + Math.random() * 900000).toString(); 
+
+        // Find the user and save the code and phone number
+        const user = await User.findByIdAndUpdate(req.user.id, { 
+            verificationCode: otp,
+            sellerPhone: phone 
+        });
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // SIMULATE SENDING THE SMS (Look at your backend terminal for this!)
+        console.log(`\n📱 SMS TO ${phone}: Your Shelv Seller Verification Code is: ${otp}\n`);
+
+        res.status(200).json({ message: "Verification code sent!" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// 2. VERIFY OTP AND UPGRADE ACCOUNT
+app.post('/api/auth/verify-otp', authMiddleware, async (req, res) => {
+    try {
+        const { code } = req.body;
+        const user = await User.findById(req.user.id);
+
+        // Check if the code matches
+        if (user.verificationCode === code && code !== "") {
+            // Success! Upgrade them immediately.
+            user.role = 'seller';
+            user.sellerStatus = 'approved';
+            user.verificationCode = ""; // Clear the code so it can't be reused
+            await user.save();
+
+            // Send back the updated user data for the frontend to save
+            res.status(200).json({ 
+                message: "Verification successful! You are now a seller.",
+                updatedUser: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    sellerStatus: user.sellerStatus
+                }
+            });
+        } else {
+            res.status(400).json({ message: "Invalid verification code. Please try again." });
+        }
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Shelv Server is running on http://localhost:${PORT}`);
 });

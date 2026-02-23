@@ -9,6 +9,7 @@ import SellerDashboard from './SellerDashboard';
 import EditBook from './EditBook';
 import BookCard from './BookCard';
 import BookDetails from './BookDetails';
+import ApplySeller from './ApplySeller';
 
 // 1. The Home Component
 function Home() {
@@ -156,8 +157,11 @@ function App() {
                   <div className="flex flex-col items-end">
                     <span className="text-sm font-medium text-gray-900">Hi, {user.name?.split(' ')[0]}</span>
 
+                    {/* REPLACED: Now links to the verification page instead of an instant API call */}
                     {user?.sellerStatus === 'none' && user?.role !== 'admin' && (
-                      <button onClick={requestSellerAccount} className="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded mt-1">Become a Seller</button>
+                      <Link to="/apply-seller" className="text-[10px] bg-amber-500 hover:bg-amber-600 transition-colors text-white px-3 py-1 rounded-full mt-1 font-bold tracking-wide uppercase">
+                        Become a Seller
+                      </Link>
                     )}
                     {user?.sellerStatus === 'pending' && <span className="text-[10px] text-amber-600 font-bold italic">Pending...</span>}
                     {user?.role === 'admin' && <Link to="/admin" className="text-[10px] text-red-600 font-bold">Admin Panel</Link>}
@@ -212,6 +216,11 @@ function App() {
                 ? <EditBook />
                 : <Navigate to="/" replace />
             }
+          />
+          {/* VERIFICATION ROUTE */}
+          <Route
+            path="/apply-seller"
+            element={user ? <ApplySeller /> : <Navigate to="/login" replace />}
           />
         </Routes>
       </div>
