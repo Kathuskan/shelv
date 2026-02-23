@@ -9,20 +9,36 @@ function AddBook() {
     isbn: '',
     listingType: 'Sale',
     condition: 'New',
-    price: ''
+    price: '',
+    Image: '',
+    description: '',
+    contactEmail: '',
+    contactPhone: ''
   });
 
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ 
-      ...formData, 
-      [e.target.name]: e.target.value 
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
     });
   };
 
+  // Converts the image file into a Base64 text string
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+        setFormData({ ...formData, image: reader.result });
+      };
+    }
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     try {
       // 1. Retrieve the digital ID card from the browser's memory
       const token = localStorage.getItem('token');
@@ -40,13 +56,13 @@ function AddBook() {
           Authorization: `Bearer ${token}` // <--- Presenting the VIP wristband to the Bouncer
         }
       });
-      
+
       console.log("Success:", response.data);
       alert('📚 Book added to Shelv successfully!');
-      
+
       // 3. Send the user back to the Home page to see their new listing
       navigate('/');
-      
+
     } catch (error) {
       console.error("Error adding book:", error.response?.data || error.message);
       alert(error.response?.data?.message || 'Failed to add book. Please try again.');
@@ -60,30 +76,30 @@ function AddBook() {
           <h2 className="text-2xl font-bold text-white">List a Book on Shelv</h2>
           <p className="text-indigo-200 text-sm mt-1">Fill out the details below to add to the inventory.</p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-2">Book Title</label>
-              <input type="text" name="title" value={formData.title} onChange={handleChange} required 
+              <input type="text" name="title" value={formData.title} onChange={handleChange} required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none" placeholder="e.g. Introduction to Algorithms" />
             </div>
-            
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Author Name</label>
-              <input type="text" name="author" value={formData.author} onChange={handleChange} required 
+              <input type="text" name="author" value={formData.author} onChange={handleChange} required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none" placeholder="e.g. Thomas H. Cormen" />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">ISBN Number</label>
-              <input type="text" name="isbn" value={formData.isbn} onChange={handleChange} required 
+              <input type="text" name="isbn" value={formData.isbn} onChange={handleChange} required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none" placeholder="e.g. 978-0262033848" />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Listing Type</label>
-              <select name="listingType" value={formData.listingType} onChange={handleChange} 
+              <select name="listingType" value={formData.listingType} onChange={handleChange}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none bg-white">
                 <option value="Sale">For Sale</option>
                 <option value="Rent">For Rent</option>
@@ -92,7 +108,7 @@ function AddBook() {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Condition</label>
-              <select name="condition" value={formData.condition} onChange={handleChange} 
+              <select name="condition" value={formData.condition} onChange={handleChange}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none bg-white">
                 <option value="New">New</option>
                 <option value="Used">Used</option>
@@ -100,12 +116,42 @@ function AddBook() {
             </div>
 
             <div className="col-span-1 md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Price ($)</label>
-              <input type="number" name="price" min="0" step="0.01" value={formData.price} onChange={handleChange} required 
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none" placeholder="0.00" />
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Price (Rs)</label>
+              <input type="number" name="price" min="0" step="1" value={formData.price} onChange={handleChange} required
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none" placeholder="0" />
             </div>
+
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Book Image</label>
+              <input type="file" name="image" onChange={handleImageUpload} required
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none" />
+            </div>
+            {/* NEW: Description Area */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Book Description</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                required
+                rows="3"
+                placeholder="Describe the condition, edition, or any extra details..."
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none resize-none"
+              />
+            </div>
+
+
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Contact Email</label>
+              <input type="email" name="contactEmail" value={formData.contactEmail} onChange={handleChange} required placeholder="seller@example.com" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
+            
+              <label className="block text-sm font-bold text-gray-700 mb-2">Contact Phone</label>
+              <input type="tel" name="contactPhone" value={formData.contactPhone} onChange={handleChange} required placeholder="07X XXX XXXX" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
+            </div>
+
           </div>
-          
+
           <button type="submit" className="w-full bg-gray-900 hover:bg-indigo-600 text-white font-bold py-4 px-8 rounded-xl transition-colors duration-300 mt-8 shadow-lg shadow-indigo-200">
             Publish Listing
           </button>

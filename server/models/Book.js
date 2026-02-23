@@ -4,6 +4,9 @@ const bookSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true },
     author: { type: String, required: true },
     isbn: { type: String, unique: true, required: true },
+    description: { type: String, required: true },
+    contactEmail: { type: String, required: true },
+    contactPhone: { type: String, required: true },
 
     listingType: {
         type: String,
@@ -27,6 +30,10 @@ const bookSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true // Now enforced! Every book MUST have a verified seller.
+    },
+    image: { 
+        type: String, 
+        required: true 
     }
 }, { timestamps: true });
 

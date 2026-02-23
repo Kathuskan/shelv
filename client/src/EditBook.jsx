@@ -3,21 +3,21 @@ import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 
 function EditBook() {
-  const { id } = useParams(); // Gets the book ID from the URL
+  const { id } = useParams();
   const navigate = useNavigate();
+  
+  // 1. Make sure image is in our initial state
   const [formData, setFormData] = useState({
-    title: '', author: '', price: '', condition: 'New', listingType: 'Sale'
+    title: '', author: '', price: '', condition: 'New', listingType: 'Sale', image: ''
   });
   const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem('token');
 
-  // Fetch the existing book data when the page loads
   useEffect(() => {
     const fetchBook = async () => {
       try {
         const response = await axios.get(`http://localhost:5001/api/books`);
-        // Find the specific book from the public list
         const bookToEdit = response.data.find(b => b._id === id);
         if (bookToEdit) {
           setFormData(bookToEdit);
@@ -35,6 +35,18 @@ function EditBook() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // 2. The Base64 Image Converter
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+        setFormData({ ...formData, image: reader.result });
+      };
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -42,7 +54,7 @@ function EditBook() {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Book updated successfully!');
-      navigate('/my-listings'); // Send them back to their dashboard
+      navigate('/my-listings');
     } catch (error) {
       alert('Failed to update book.');
       console.error(error);
@@ -56,6 +68,25 @@ function EditBook() {
       <h2 className="text-3xl font-black text-gray-900 mb-8">Edit Listing</h2>
       
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+        
+        {/* 3. The Image Upload Section */}
+        <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <label className="block text-sm font-bold text-gray-700 mb-2">Update Cover Image (Optional)</label>
+          <input 
+            type="file" 
+            accept="image/*" 
+            onChange={handleImageUpload} 
+            // Notice: NO 'required' attribute here!
+            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer outline-none"
+          />
+          {formData.image && (
+            <div className="mt-4">
+              <p className="text-xs text-gray-500 mb-2 font-bold uppercase tracking-wide">Current Image Preview</p>
+              <img src={formData.image} alt="Preview" className="h-32 w-24 object-cover rounded-lg shadow-sm border border-gray-200" />
+            </div>
+          )}
+        </div>
+
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Book Title</label>
           <input type="text" name="title" value={formData.title} onChange={handleChange} required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
@@ -68,7 +99,7 @@ function EditBook() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Price ($)</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Price (Rs)</label>
             <input type="number" name="price" value={formData.price} onChange={handleChange} required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
           </div>
           <div>

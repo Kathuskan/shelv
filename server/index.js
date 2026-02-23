@@ -17,7 +17,9 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+// Increase the limit to 10 megabytes so it can accept image strings
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // 1. Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -189,6 +191,17 @@ app.put('/api/seller/books/:id', authMiddleware, isApprovedSeller, async (req, r
     }
 });
 
+// PUBLIC ROUTE: Fetch a single book by its ID
+app.get('/api/books/:id', async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ message: "Book not found" });
+        
+        res.status(200).json(book);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`🚀 Shelv Server is running on http://localhost:${PORT}`);
