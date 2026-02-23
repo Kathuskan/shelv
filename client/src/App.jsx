@@ -5,6 +5,7 @@ import AddBook from './AddBook';
 import Login from './Login';
 import Admin from './Admin';
 import Register from './Register';
+import SellerDashboard from './SellerDashboard';
 
 // 1. The Home Component
 function Home() {
@@ -101,9 +102,12 @@ function App() {
 
             {user ? (
               <>
-                {/* FIXED: Check sellerStatus specifically */}
+                {/* INSIDE YOUR NAV BAR */}
                 {(user?.role === 'admin' || (user?.role === 'seller' && user?.sellerStatus === 'approved')) && (
-                  <Link to="/add-book" className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition-all">+ Add Book</Link>
+                  <div className="flex gap-4 items-center">
+                    <Link to="/my-listings" className="text-gray-600 font-semibold hover:text-indigo-600 transition-colors">My Listings</Link>
+                    <Link to="/add-book" className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition-all">+ Add Book</Link>
+                  </div>
                 )}
 
                 <div className="ml-4 border-l pl-6 border-gray-300 flex items-center gap-4">
@@ -150,6 +154,15 @@ function App() {
             element={
               user?.role === 'admin'
                 ? <Admin />
+                : <Navigate to="/" replace />
+            }
+          />
+          {/* PROTECTED ROUTE: Only Admins or Approved Sellers */}
+          <Route
+            path="/my-listings"
+            element={
+              (user?.role === 'admin' || (user?.role === 'seller' && user?.sellerStatus === 'approved'))
+                ? <SellerDashboard />
                 : <Navigate to="/" replace />
             }
           />

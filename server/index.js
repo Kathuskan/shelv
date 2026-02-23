@@ -146,6 +146,28 @@ app.put('/api/auth/request-seller', authMiddleware, async (req, res) => {
     }
 });
 
+// SELLER ROUTE: Fetch only the logged-in seller's books
+app.get('/api/seller/books', authMiddleware, isApprovedSeller, async (req, res) => {
+    try {
+        const books = await Book.find({ seller: req.user.id });
+        res.status(200).json(books);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// SELLER ROUTE: Seller deletes their own book
+app.delete('/api/seller/books/:id', authMiddleware, isApprovedSeller, async (req, res) => {
+    try {
+        const book = await Book.findOne({ _id: req.params.id, seller: req.user.id });
+        if (!book) return res.status(404).json({ message: "Book not found or unauthorized" });
+
+        await Book.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: "Your listing was deleted" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`🚀 Shelv Server is running on http://localhost:${PORT}`);
