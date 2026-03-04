@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 
 // Models
 const Book = require('./models/book'); 
@@ -17,9 +18,9 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
-// Increase the limit to 10 megabytes so it can accept image strings
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// Increase the limit to 50 megabytes so it can accept image strings
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // 1. Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -204,29 +205,6 @@ app.get('/api/books/:id', async (req, res) => {
 });
 
 // 1. GENERATE AND SEND OTP
-app.post('/api/auth/send-otp', authMiddleware, async (req, res) => {
-    try {
-        const { phone } = req.body;
-        // Generate a random 6-digit code
-        const otp = Math.floor(100000 + Math.random() * 900000).toString(); 
-
-        // Find the user and save the code and phone number
-        const user = await User.findByIdAndUpdate(req.user.id, { 
-            verificationCode: otp,
-            sellerPhone: phone 
-        });
-
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        // SIMULATE SENDING THE SMS (Look at your backend terminal for this!)
-        console.log(`\n📱 SMS TO ${phone}: Your Shelv Seller Verification Code is: ${otp}\n`);
-
-        res.status(200).json({ message: "Verification code sent!" });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
 // 2. VERIFY OTP AND UPGRADE ACCOUNT
 app.post('/api/auth/verify-otp', authMiddleware, async (req, res) => {
     try {
@@ -235,15 +213,23 @@ app.post('/api/auth/verify-otp', authMiddleware, async (req, res) => {
 
         // Check if the code matches
         if (user.verificationCode === code && code !== "") {
-            // Success! Upgrade them immediately.
+            // Success! Upgrade them immediately in the DB
             user.role = 'seller';
             user.sellerStatus = 'approved';
             user.verificationCode = ""; // Clear the code so it can't be reused
             await user.save();
 
-            // Send back the updated user data for the frontend to save
+            // 🌟 THE MISSING MAGIC: Generate a brand new token with their Seller status!
+            const newToken = jwt.sign(
+                { id: user._id, role: user.role, sellerStatus: user.sellerStatus }, 
+                process.env.JWT_SECRET, 
+                { expiresIn: '1d' }
+            );
+
+            // Send BOTH the new token and the updated user back to the frontend
             res.status(200).json({ 
                 message: "Verification successful! You are now a seller.",
+                token: newToken, // 🌟 Handing the new ID card to the frontend!
                 updatedUser: {
                     id: user._id,
                     name: user.name,
@@ -259,6 +245,73 @@ app.post('/api/auth/verify-otp', authMiddleware, async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+// 2. VERIFY OTP AND UPGRADE ACCOUNT
+// 1. GENERATE AND SEND OTP
+app.post('/api/auth/send-otp', authMiddleware, async (req, res) => {
+    try {
+        const { phone } = req.body;
+        const otp = Math.floor(100000 + Math.random() * 900000).toString(); 
+
+        // 🌟 THE FIX: Check for both .id and ._id just like we did in the security guard!
+        const userId = req.user.id || req.user._id;
+
+        const user = await User.findByIdAndUpdate(userId, { 
+            verificationCode: otp,
+            sellerPhone: phone 
+        });
+
+        if (!user) {
+            console.log("❌ OTP FAIL: User not found in DB for ID:", userId);
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // SIMULATE SENDING THE SMS
+        console.log(`\n📱 SMS TO ${phone}: Your Shelv Seller Verification Code is: ${otp}\n`);
+
+        res.status(200).json({ message: "Verification code sent!" });
+    } catch (err) {
+        // 🌟 THE DIAGNOSTIC: Print the exact error to the terminal if it crashes
+        console.error("❌ CRITICAL OTP ERROR:", err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// USER ROUTE: Toggle Save/Unsave a book
+app.post('/api/user/save-book/:bookId', authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        const bookId = req.params.bookId;
+
+        // Check if the book is already in their saved list
+        const isSaved = user.savedBooks.includes(bookId);
+
+        if (isSaved) {
+            // If it's saved, remove it (Unsave)
+            user.savedBooks = user.savedBooks.filter(id => id.toString() !== bookId);
+        } else {
+            // If it's not saved, add it (Save)
+            user.savedBooks.push(bookId);
+        }
+
+        await user.save();
+        res.status(200).json({ savedBooks: user.savedBooks });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// USER ROUTE: Fetch all saved books with full book details
+app.get('/api/user/saved-books', authMiddleware, async (req, res) => {
+    try {
+        // .populate() replaces the raw IDs with the actual Book data!
+        const user = await User.findById(req.user.id).populate('savedBooks');
+        res.status(200).json(user.savedBooks);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 
 app.listen(PORT, () => {
     console.log(`🚀 Shelv Server is running on http://localhost:${PORT}`);

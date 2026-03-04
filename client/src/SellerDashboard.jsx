@@ -48,9 +48,6 @@ function SellerDashboard() {
                     <h2 className="text-3xl font-black text-gray-900 tracking-tight">My Listings</h2>
                     <p className="text-gray-500 mt-1">Manage the books you are selling or renting.</p>
                 </div>
-                <Link to="/add-book" className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition-all shadow-md">
-                    + Add New Book
-                </Link>
             </div>
 
             {/* Empty State Checker */}

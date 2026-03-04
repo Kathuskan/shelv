@@ -28,7 +28,18 @@ function AddBook() {
   // Converts the image file into a Base64 text string
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
+    
     if (file) {
+      // --- NEW: STRICT FILE TYPE VALIDATION ---
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+      
+      if (!validTypes.includes(file.type)) {
+        alert("Please upload a valid web image (JPG, PNG, or WebP).");
+        e.target.value = ''; // Instantly clears the bad file from the input
+        return; // Stops the function dead in its tracks
+      }
+      // ----------------------------------------
+
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onloadend = () => {

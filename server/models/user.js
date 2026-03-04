@@ -25,7 +25,11 @@ const userSchema = new mongoose.Schema({
         default: 'none' 
     },
     sellerPhone: { type: String, default: "" },
-    verificationCode: { type: String, default: "" }
+    verificationCode: { type: String, default: "" },
+    savedBooks: [{ 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Book' 
+    }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

@@ -4,37 +4,52 @@ import { Link } from 'react-router-dom';
 
 function Register() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
-  
+
   // NEW: Track if they want to be a seller right away
-  const [wantToSell, setWantToSell] = useState(false); 
-  
+  const [wantToSell, setWantToSell] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
+    // --- NEW: VALIDATION LOGIC ---
+    // 1. Validate Email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError("Please enter a valid email address.");
+      setLoading(false);
+      return; // Stop the function here!
+    }
+
+    // 2. Validate Password (Min 8 chars, at least 1 letter and 1 number)
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      setError("Password must be at least 8 characters long and include at least one letter and one number.");
+      setLoading(false);
+      return;
+    }
+    // -----------------------------
+
     try {
       // 1. Create the account in the database
       await axios.post('http://localhost:5001/api/auth/register', formData);
-      
-      // 2. Automatically log them in immediately to get their secure Token
+
+      // 2. Automatically log them in immediately
       const loginRes = await axios.post('http://localhost:5001/api/auth/login', {
         email: formData.email,
         password: formData.password
       });
-      
-      // Save the digital ID card to the browser
+
       localStorage.setItem('token', loginRes.data.token);
       localStorage.setItem('user', JSON.stringify(loginRes.data.user));
 
-      // 3. The Magic Routing! Send them to the OTP page or the Home page
+      // 3. Routing
       if (wantToSell) {
         window.location.href = '/apply-seller';
       } else {
@@ -72,7 +87,7 @@ function Register() {
           </div>
 
           {/* NEW: The Seller Toggle Box */}
-          <div 
+          <div
             onClick={() => setWantToSell(!wantToSell)}
             className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex items-center justify-between ${wantToSell ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'}`}
           >
