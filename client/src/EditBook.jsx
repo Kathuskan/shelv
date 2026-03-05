@@ -96,7 +96,28 @@ function EditBook() {
           <label className="block text-sm font-bold text-gray-700 mb-2">Author</label>
           <input type="text" name="author" value={formData.author} onChange={handleChange} required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
         </div>
-
+        {/* UPDATED: Official Category Dropdown */}
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Book Category</label>
+          <select 
+            name="category" 
+            value={formData.category} 
+            onChange={handleChange} 
+            required
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none bg-white"
+          >
+            <option value="Mystery & Thriller">Mystery & Thriller</option>
+            <option value="Science Fiction">Science Fiction</option>
+            <option value="Fantasy">Fantasy</option>
+            <option value="Romance">Romance</option>
+            <option value="Biography">Biography</option>
+            <option value="Self-Help">Self-Help</option>
+            <option value="History">History</option>
+            <option value="Children’s Books">Children’s Books</option>
+            <option value="Business">Business</option>
+            <option value="Science & Technology">Science & Technology</option>
+          </select>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Price (Rs)</label>

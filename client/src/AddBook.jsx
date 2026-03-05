@@ -7,6 +7,7 @@ function AddBook() {
     title: '',
     author: '',
     isbn: '',
+    category: 'Mystery & Thriller',
     listingType: 'Sale',
     condition: 'New',
     price: '',
@@ -28,11 +29,11 @@ function AddBook() {
   // Converts the image file into a Base64 text string
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    
+
     if (file) {
       // --- NEW: STRICT FILE TYPE VALIDATION ---
       const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-      
+
       if (!validTypes.includes(file.type)) {
         alert("Please upload a valid web image (JPG, PNG, or WebP).");
         e.target.value = ''; // Instantly clears the bad file from the input
@@ -107,7 +108,28 @@ function AddBook() {
               <input type="text" name="isbn" value={formData.isbn} onChange={handleChange} required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none" placeholder="e.g. 978-0262033848" />
             </div>
-
+            {/* UPDATED: Official Category Dropdown */}
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Book Category</label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none bg-white"
+              >
+                <option value="Mystery & Thriller">Mystery & Thriller</option>
+                <option value="Science Fiction">Science Fiction</option>
+                <option value="Fantasy">Fantasy</option>
+                <option value="Romance">Romance</option>
+                <option value="Biography">Biography</option>
+                <option value="Self-Help">Self-Help</option>
+                <option value="History">History</option>
+                <option value="Children’s Books">Children’s Books</option>
+                <option value="Business">Business</option>
+                <option value="Science & Technology">Science & Technology</option>
+              </select>
+            </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Listing Type</label>
               <select name="listingType" value={formData.listingType} onChange={handleChange}
@@ -156,7 +178,7 @@ function AddBook() {
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Contact Email</label>
               <input type="email" name="contactEmail" value={formData.contactEmail} onChange={handleChange} required placeholder="seller@example.com" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
-            
+
               <label className="block text-sm font-bold text-gray-700 mb-2">Contact Phone</label>
               <input type="tel" name="contactPhone" value={formData.contactPhone} onChange={handleChange} required placeholder="07X XXX XXXX" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
             </div>

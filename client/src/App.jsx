@@ -11,6 +11,7 @@ import BookCard from './BookCard';
 import BookDetails from './BookDetails';
 import ApplySeller from './ApplySeller';
 
+
 // 1. The Home Component
 function Home() {
   const [books, setBooks] = useState([]);
@@ -20,6 +21,13 @@ function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All');
   const [conditionFilter, setConditionFilter] = useState('All');
+
+  // Our Official Categories List
+  const categories = [
+    "Mystery & Thriller", "Science Fiction", "Fantasy", "Romance",
+    "Biography", "Self-Help", "History", "Children’s Books",
+    "Business", "Science & Technology"
+  ];
 
   useEffect(() => {
     axios.get('http://localhost:5001/api/books')
@@ -33,6 +41,7 @@ function Home() {
       });
   }, []);
 
+  // 1. Apply top-level search and dropdown filters
   const filteredBooks = books.filter((book) => {
     const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       book.author.toLowerCase().includes(searchTerm.toLowerCase());
@@ -42,73 +51,146 @@ function Home() {
     return matchesSearch && matchesType && matchesCondition;
   });
 
+  // 2. Get the 8 most recently added books (reversing the array so newest are first)
+  const recentBooks = [...filteredBooks].reverse().slice(0, 8);
+
+  // 3. Smooth Scroll Function for Quick Navigation
+  const scrollToCategory = (categoryName) => {
+    const element = document.getElementById(`category-${categoryName}`);
+    if (element) {
+      // Offset slightly so the navbar doesn't cover the title
+      const yOffset = -100;
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900">Current Inventory</h2>
-          <span className="inline-block mt-2 bg-indigo-100 text-indigo-800 text-sm font-medium px-3 py-1 rounded-full">
-            {filteredBooks.length} Books Found
-          </span>
-        </div>
+    <div className="w-full">
+      {/* --- SLEEK FULL-WIDTH CATEGORY BAR --- */}
+      {/* FIXED: Moved outside the max-w container so it stretches edge-to-edge on ALL screens */}
+      <div className="bg-indigo-600 shadow-inner overflow-x-auto scrollbar-hide">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-8 py-3 min-w-max">
+            {categories.map(category => {
+              const hasBooks = filteredBooks.some(book => book.category === category);
+              if (!hasBooks) return null;
 
-        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-          <input
-            type="text"
-            placeholder="Search titles or authors..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none w-full md:w-64"
-          />
-
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none cursor-pointer bg-white"
-          >
-            <option value="All">All Types</option>
-            <option value="Rent">For Rent</option>
-            <option value="Sale">For Sale</option>
-          </select>
-
-          <select
-            value={conditionFilter}
-            onChange={(e) => setConditionFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none cursor-pointer bg-white"
-          >
-            <option value="All">All Conditions</option>
-            <option value="New">New</option>
-            <option value="Used">Used</option>
-          </select>
+              return (
+                <button
+                  key={`nav-${category}`}
+                  onClick={() => scrollToCategory(category)}
+                  // FIXED: Changed to text-indigo-100 and hover:text-white for a smooth hover effect
+                  className="whitespace-nowrap text-sm font-semibold tracking-wide text-white hover:text-white transition-colors"
+                >
+                  {category}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      {/* --- MAIN CONTENT AREA --- */}
+      {/* FIXED: Added py-8 back to restore the proper breathing room */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* --- TOP HEADER & SEARCH BAR --- */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">Marketplace</h2>
+            <span className="inline-block mt-2 bg-indigo-100 text-indigo-800 text-sm font-medium px-3 py-1 rounded-full">
+              {filteredBooks.length} Books Found
+            </span>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+            <input
+              type="text"
+              placeholder="Search titles or authors..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none w-full md:w-64"
+            />
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none cursor-pointer bg-white"
+            >
+              <option value="All">All Types</option>
+              <option value="Rent">For Rent</option>
+              <option value="Sale">For Sale</option>
+            </select>
+            <select
+              value={conditionFilter}
+              onChange={(e) => setConditionFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 outline-none cursor-pointer bg-white"
+            >
+              <option value="All">All Conditions</option>
+              <option value="New">New</option>
+              <option value="Used">Used</option>
+            </select>
+          </div>
         </div>
-      ) : (
-        <>
-          {filteredBooks.length === 0 ? (
-            <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
-              <p className="text-xl text-gray-500 font-medium">No books match your filters.</p>
-              <button onClick={() => { setSearchTerm(''); setFilterType('All'); setConditionFilter('All'); }} className="mt-4 text-indigo-600 font-bold hover:underline">
-                Clear Filters
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {filteredBooks.map((book) => (
-                // This ONE line replaces all that old HTML!
-                <BookCard key={book._id} book={book} />
-              ))}
-            </div>
-          )}
-        </>
-      )}
+
+        {/* --- DYNAMIC BOOK SECTIONS --- */}
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : (
+          <>
+            {filteredBooks.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <p className="text-xl text-gray-500 font-medium">No books match your filters.</p>
+                <button onClick={() => { setSearchTerm(''); setFilterType('All'); setConditionFilter('All'); }} className="mt-4 text-indigo-600 font-bold hover:underline">
+                  Clear Filters
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-16">
+
+                {/* --- SECTION: RECENT LISTINGS --- */}
+                {recentBooks.length > 0 && (
+                  <section>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">🌟 Recently Added</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                      {recentBooks.map((book) => (
+                        <BookCard key={`recent-${book._id}`} book={book} />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* --- SECTIONS: CATEGORY WISE LISTINGS --- */}
+                {categories.map((category) => {
+                  const booksInCategory = filteredBooks.filter(book => book.category === category);
+
+                  if (booksInCategory.length === 0) return null;
+
+                  return (
+                    <section key={`section-${category}`} id={`category-${category}`} className="scroll-mt-6">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
+                        {category} <span className="text-gray-400 text-lg font-normal ml-2">({booksInCategory.length})</span>
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                        {booksInCategory.map((book) => (
+                          <BookCard key={book._id} book={book} />
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
+
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
+
 
 // 2. The Main App Component
 function App() {
@@ -138,7 +220,7 @@ function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-        <nav className="flex items-center justify-between bg-white shadow-md px-8 py-4 mb-8 border-b border-gray-200">
+        <nav className="sticky top-0 z-50 flex items-center justify-between bg-white shadow-md px-8 py-4 border-b border-gray-200">
           <Link to="/"><h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">📚 Shelv</h1></Link>
 
           <div className="flex gap-6 items-center">
