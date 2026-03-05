@@ -69,7 +69,7 @@ function Home() {
     <div className="w-full">
       {/* --- SLEEK FULL-WIDTH CATEGORY BAR --- */}
       {/* FIXED: Moved outside the max-w container so it stretches edge-to-edge on ALL screens */}
-      <div className="bg-indigo-600 shadow-inner overflow-x-auto scrollbar-hide">
+      <div className="sticky top-19 z-50 bg-indigo-600 shadow-inner overflow-x-auto scrollbar-hide">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-8 py-3 min-w-max">
             {categories.map(category => {
