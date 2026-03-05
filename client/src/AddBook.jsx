@@ -11,7 +11,7 @@ function AddBook() {
     listingType: 'Sale',
     condition: 'New',
     price: '',
-    Image: '',
+    image: '', // FIXED: Changed 'Image' to 'image' so it matches the backend!
     description: '',
     contactEmail: '',
     contactPhone: ''
@@ -31,15 +31,14 @@ function AddBook() {
     const file = e.target.files[0];
 
     if (file) {
-      // --- NEW: STRICT FILE TYPE VALIDATION ---
+      // --- STRICT FILE TYPE VALIDATION ---
       const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 
       if (!validTypes.includes(file.type)) {
         alert("Please upload a valid web image (JPG, PNG, or WebP).");
-        e.target.value = ''; // Instantly clears the bad file from the input
-        return; // Stops the function dead in its tracks
+        e.target.value = ''; 
+        return; 
       }
-      // ----------------------------------------
 
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -51,28 +50,40 @@ function AddBook() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // --- NEW: SRI LANKAN PHONE NUMBER LOGIC ---
+    // 1. Strip out any spaces or dashes the user might have typed
+    const cleanPhone = formData.contactPhone.replace(/[\s-]/g, '');
+    
+    // 2. Check if it starts with '07' and is exactly 10 digits long
+    const phoneRegex = /^07\d{8}$/;
+    
+    if (!phoneRegex.test(cleanPhone)) {
+      alert("Please enter a valid 10-digit Sri Lankan phone number (e.g., 071 234 5678).");
+      return; // Stops the form from submitting!
+    }
+    // ------------------------------------------
+
     try {
-      // 1. Retrieve the digital ID card from the browser's memory
       const token = localStorage.getItem('token');
 
-      // Safety check: If they somehow got to this page without a token, boot them to login
       if (!token) {
         alert("You must be logged in to post a book.");
         navigate('/login');
         return;
       }
 
-      // 2. Send the POST request WITH the Authorization header
-      const response = await axios.post('http://localhost:5001/api/books', formData, {
+      // Update formData with the cleaned phone number before sending
+      const finalData = { ...formData, contactPhone: cleanPhone };
+
+      const response = await axios.post('http://localhost:5001/api/books', finalData, {
         headers: {
-          Authorization: `Bearer ${token}` // <--- Presenting the VIP wristband to the Bouncer
+          Authorization: `Bearer ${token}` 
         }
       });
 
       console.log("Success:", response.data);
       alert('📚 Book added to Shelv successfully!');
-
-      // 3. Send the user back to the Home page to see their new listing
       navigate('/');
 
     } catch (error) {
@@ -108,7 +119,7 @@ function AddBook() {
               <input type="text" name="isbn" value={formData.isbn} onChange={handleChange} required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none" placeholder="e.g. 978-0262033848" />
             </div>
-            {/* UPDATED: Official Category Dropdown */}
+            
             <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-2">Book Category</label>
               <select
@@ -130,6 +141,7 @@ function AddBook() {
                 <option value="Science & Technology">Science & Technology</option>
               </select>
             </div>
+            
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Listing Type</label>
               <select name="listingType" value={formData.listingType} onChange={handleChange}
@@ -159,8 +171,8 @@ function AddBook() {
               <input type="file" name="image" onChange={handleImageUpload} required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none" />
             </div>
-            {/* NEW: Description Area */}
-            <div>
+            
+            <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-2">Book Description</label>
               <textarea
                 name="description"
@@ -173,19 +185,21 @@ function AddBook() {
               />
             </div>
 
-
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Contact Email</label>
-              <input type="email" name="contactEmail" value={formData.contactEmail} onChange={handleChange} required placeholder="seller@example.com" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
-
-              <label className="block text-sm font-bold text-gray-700 mb-2">Contact Phone</label>
-              <input type="tel" name="contactPhone" value={formData.contactPhone} onChange={handleChange} required placeholder="07X XXX XXXX" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
+            <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Contact Email</label>
+                <input type="email" name="contactEmail" value={formData.contactEmail} onChange={handleChange} required placeholder="seller@example.com" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Contact Phone</label>
+                <input type="tel" name="contactPhone" value={formData.contactPhone} onChange={handleChange} required placeholder="07X XXX XXXX" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
+              </div>
             </div>
 
           </div>
 
-          <button type="submit" className="w-full bg-gray-900 hover:bg-indigo-600 text-white font-bold py-4 px-8 rounded-xl transition-colors duration-300 mt-8 shadow-lg shadow-indigo-200">
+          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-colors duration-300 mt-8 shadow-lg shadow-indigo-200">
             Publish Listing
           </button>
         </form>

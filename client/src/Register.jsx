@@ -100,7 +100,7 @@ function Register() {
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-gray-900 hover:bg-black text-white font-bold py-4 rounded-xl transition-all shadow-md transform hover:-translate-y-0.5">
+          <button type="submit" disabled={loading} className="w-full bg-indigo-600  hover:bg-indigo-700  text-white font-bold py-4 rounded-xl transition-all shadow-md transform hover:-translate-y-0.5">
             {loading ? 'Creating Account...' : (wantToSell ? 'Continue to Verification \u2192' : 'Create Account')}
           </button>
         </form>
