@@ -11,6 +11,8 @@ function AddBook() {
     listingType: 'Sale',
     condition: 'New',
     price: '',
+    rentalPeriod: '',
+    extraDayPrice: '',
     image: '', // FIXED: Changed 'Image' to 'image' so it matches the backend!
     description: '',
     contactEmail: '',
@@ -160,11 +162,40 @@ function AddBook() {
               </select>
             </div>
 
-            <div className="col-span-1 md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Price (Rs)</label>
-              <input type="number" name="price" min="0" step="1" value={formData.price} onChange={handleChange} required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none" placeholder="0" />
-            </div>
+            {/* --- 🌟 DYNAMIC PRICING UI --- */}
+            {formData.listingType === 'Sale' ? (
+              // IF SALE: Show standard single price
+              <div className="col-span-1 md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Selling Price (Rs)</label>
+                <input type="number" name="price" min="0" step="1" value={formData.price} onChange={handleChange} required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. 1500" />
+              </div>
+            ) : (
+              // IF RENT: Show the 3-part package builder
+              <div className="col-span-1 md:col-span-2 bg-indigo-50 p-6 rounded-xl border border-indigo-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-3">
+                  <h4 className="text-sm font-bold text-indigo-900 mb-1">Rental Package Details</h4>
+                  <p className="text-xs text-indigo-600 mb-3">Define your base rental package and late fees.</p>
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">Base Period (Days)</label>
+                  <input type="number" name="rentalPeriod" min="1" value={formData.rentalPeriod} onChange={handleChange} required
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. 7" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">Base Package Price (Rs)</label>
+                  <input type="number" name="price" min="0" value={formData.price} onChange={handleChange} required
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. 500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">Extra Day Charge (Rs)</label>
+                  <input type="number" name="extraDayPrice" min="0" value={formData.extraDayPrice} onChange={handleChange} required
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. 50" />
+                </div>
+              </div>
+            )}
+            {/* -------------------------------- */}
 
             <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Book Image</label>

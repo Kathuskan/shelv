@@ -30,10 +30,26 @@ function BookCard({ book, children }) {
           <h3 className="text-xl font-bold text-gray-900 mb-1 leading-tight">{book.title}</h3>
           <p className="text-gray-500 text-sm mb-4">by {book.author}</p>
           
-          {/* Price */}
-          <div className="mt-auto pt-4 border-t border-gray-100">
-            <span className="text-2xl font-extrabold text-indigo-600">Rs {book.price}.00</span>
+          {/* --- 🌟 ONLY THIS PRICE BLOCK WAS UPDATED 🌟 --- */}
+          <div className="mt-auto pt-4 border-t border-gray-100 min-h-[4.5rem] flex flex-col justify-center">
+            {book.listingType === 'Rent' ? (
+              <div className="flex flex-col">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-extrabold text-indigo-600">Rs {book.price}.00</span>
+                  <span className="text-sm font-bold text-gray-500">/ {book.rentalPeriod} days</span>
+                </div>
+                {book.extraDayPrice && (
+                  <span className="text-xs text-gray-500 mt-1">
+                    + Rs {book.extraDayPrice}.00 per extra day
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="text-2xl font-extrabold text-indigo-600">Rs {book.price}.00</span>
+            )}
           </div>
+          {/* ----------------------------------------------- */}
+          
         </div>
       </Link>
 
@@ -49,6 +65,5 @@ function BookCard({ book, children }) {
     </div>
   );
 }
-
 
 export default BookCard;

@@ -10,6 +10,7 @@ import EditBook from './EditBook';
 import BookCard from './BookCard';
 import BookDetails from './BookDetails';
 import ApplySeller from './ApplySeller';
+import Profile from './Profile';
 
 
 // 1. The Home Component
@@ -237,8 +238,9 @@ function App() {
 
                 <div className="ml-4 border-l pl-6 border-gray-300 flex items-center gap-4">
                   <div className="flex flex-col items-end">
-                    <span className="text-sm font-medium text-gray-900">Hi, {user.name?.split(' ')[0]}</span>
-
+                    <Link to="/profile" className="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition-colors">
+                      Hi, {user.name?.split(' ')[0]}
+                    </Link>
                     {/* REPLACED: Now links to the verification page instead of an instant API call */}
                     {user?.sellerStatus === 'none' && user?.role !== 'admin' && (
                       <Link to="/apply-seller" className="text-[10px] bg-amber-500 hover:bg-amber-600 transition-colors text-white px-3 py-1 rounded-full mt-1 font-bold tracking-wide uppercase">
@@ -304,6 +306,7 @@ function App() {
             path="/apply-seller"
             element={user ? <ApplySeller /> : <Navigate to="/login" replace />}
           />
+          <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" replace />} />
         </Routes>
       </div>
     </BrowserRouter>

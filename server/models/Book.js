@@ -23,8 +23,11 @@ const bookSchema = new mongoose.Schema({
         default: 'New'
     },
 
-    price: { type: Number, required: true, min: 0 },
-    rentalDurationDays: { type: Number, default: 0 },
+    // --- 🌟 UPDATED PRICING LOGIC ---
+    price: { type: Number, required: true }, // Used as Total Price OR Base Rent Price
+    rentalPeriod: { type: Number },          // e.g., 7 (days)
+    extraDayPrice: { type: Number },         // e.g., 50 (rupees per extra day)
+    // --------------------------------
 
     // The single, consolidated user reference
     seller: {
