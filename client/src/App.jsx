@@ -196,6 +196,7 @@ function Home() {
 // 2. The Main App Component
 function App() {
   const user = JSON.parse(localStorage.getItem('user'));
+  const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U';
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -238,9 +239,25 @@ function App() {
 
                 <div className="ml-4 border-l pl-6 border-gray-300 flex items-center gap-4">
                   <div className="flex flex-col items-end">
-                    <Link to="/profile" className="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition-colors">
-                      Hi, {user.name?.split(' ')[0]}
+                    {/* --- 🌟 NEW: AVATAR NAVBAR LINK 🌟 --- */}
+                    <Link to="/profile" className="flex items-center gap-2.5 hover:opacity-80 transition-all p-1 pr-3 rounded-full hover:bg-indigo-50 border border-transparent hover:border-indigo-100">
+
+                      {/* The Picture or Initials */}
+                      <div className="h-9 w-9 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-black text-white shadow-sm border-2 border-white overflow-hidden flex-shrink-0">
+                        {user.profilePicture ? (
+                          <img src={user.profilePicture} alt="Avatar" className="h-full w-full object-cover" />
+                        ) : (
+                          initials
+                        )}
+                      </div>
+
+                      {/* The Greeting (Hidden on super tiny mobile screens to save space) */}
+                      <span className="text-sm font-bold text-indigo-700 hidden sm:block">
+                        Hi, {user.name?.split(' ')[0]}
+                      </span>
+
                     </Link>
+                    {/* ------------------------------------- */}
                     {/* REPLACED: Now links to the verification page instead of an instant API call */}
                     {user?.sellerStatus === 'none' && user?.role !== 'admin' && (
                       <Link to="/apply-seller" className="text-[10px] bg-amber-500 hover:bg-amber-600 transition-colors text-white px-3 py-1 rounded-full mt-1 font-bold tracking-wide uppercase">

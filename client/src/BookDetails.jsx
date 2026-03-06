@@ -1,43 +1,54 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams, Link } from 'react-router-dom';
-import BookCard from './BookCard'; // 🌟 NEW: We need this to show the suggestions!
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import BookCard from './BookCard';
 
 function BookDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  
   const [book, setBook] = useState(null);
-  const [suggestions, setSuggestions] = useState([]); // 🌟 NEW: State for suggested books
+  const [suggestions, setSuggestions] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [showContact, setShowContact] = useState(false);
+  
+  const [isSaved, setIsSaved] = useState(false); 
+  
+  // 🌟 NEW: State to trigger the heart animation
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
-    // 🌟 Auto-scroll to top when a user clicks a suggestion
     window.scrollTo(0, 0);
-    setShowContact(false); // Hide contact info when a new book loads
+    setShowContact(false); 
     setLoading(true);
 
     const fetchData = async () => {
       try {
-        // 1. Fetch the main book
         const bookResponse = await axios.get(`http://localhost:5001/api/books/${id}`);
         const currentBook = bookResponse.data;
         setBook(currentBook);
 
-        // 2. Fetch all books to build suggestions
+        if (token) {
+          const savedRes = await axios.get('http://localhost:5001/api/user/saved-books', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const alreadySaved = savedRes.data.some(savedBook => savedBook._id === id);
+          setIsSaved(alreadySaved);
+        }
+
         const allBooksResponse = await axios.get(`http://localhost:5001/api/books`);
         const allBooks = allBooksResponse.data;
 
-        // 3. Filter out the book we are currently looking at
         const otherBooks = allBooks.filter(b => b._id !== currentBook._id);
-        
-        // 4. Try to find books in the same category first!
         const sameCategory = otherBooks.filter(b => b.category === currentBook.category);
         const differentCategory = otherBooks.filter(b => b.category !== currentBook.category);
         
-        // 5. Combine them and grab the top 4
         const mixedSuggestions = [...sameCategory, ...differentCategory].slice(0, 4);
-        
         setSuggestions(mixedSuggestions);
+        
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -45,7 +56,32 @@ function BookDetails() {
       }
     };
     fetchData();
-  }, [id]);
+  }, [id, token]);
+
+  const handleToggleSave = async () => {
+    if (!token) {
+      alert("Please log in to save books to your profile!");
+      navigate('/login');
+      return;
+    }
+
+    try {
+      // 🌟 Trigger the "Pop" animation instantly
+      setIsAnimating(true);
+      setTimeout(() => setIsAnimating(false), 300); // Turn it off after 300ms
+
+      setIsSaved(!isSaved);
+
+      await axios.post('http://localhost:5001/api/user/save-book', 
+        { bookId: id }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (error) {
+      setIsSaved(!isSaved);
+      console.error("Failed to save book:", error);
+      alert("Something went wrong while saving. Please try again.");
+    }
+  };
 
   if (loading) return <div className="text-center py-20 text-indigo-600 font-bold text-xl animate-pulse">Loading Book Details...</div>;
   if (!book) return <div className="text-center py-20 text-red-500 font-bold text-xl">Book not found.</div>;
@@ -56,7 +92,6 @@ function BookDetails() {
       
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row">
         
-        {/* Left Side: Large Image (Slightly smaller max-height) */}
         <div className="md:w-1/2 bg-gray-50 p-6 flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-100">
           <img 
             src={book.image} 
@@ -66,7 +101,6 @@ function BookDetails() {
           />
         </div>
 
-        {/* Right Side: Book Details (Reduced padding and text sizes) */}
         <div className="md:w-1/2 p-6 lg:p-8 flex flex-col">
           <div className="flex gap-2 mb-4">
             <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide ${book.listingType === 'Rent' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
@@ -85,7 +119,6 @@ function BookDetails() {
             <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{book.description}</p>
           </div>
           
-          {/* Dynamic Pricing */}
           <div className="mb-6">
             <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">
               {book.listingType === 'Rent' ? 'Rental Package' : 'Asking Price'}
@@ -110,7 +143,6 @@ function BookDetails() {
             )}
           </div>
 
-          {/* Contact Info Reveal */}
           {showContact ? (
             <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 animate-fade-in">
               <p className="text-xs font-bold text-indigo-800 mb-3 uppercase tracking-wide">Seller Contact Info</p>
@@ -127,17 +159,33 @@ function BookDetails() {
               </div>
             </div>
           ) : (
-            <button 
-              onClick={() => setShowContact(true)} 
-              className="w-full bg-gray-900 hover:bg-black text-white font-semibold py-3 rounded-xl text-base transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-            >
-              Contact Seller
-            </button>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowContact(true)} 
+                className="flex-grow bg-gray-900 hover:bg-black text-white font-semibold py-3 rounded-xl text-base transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              >
+                Contact Seller
+              </button>
+              
+              {/* 🌟 NEW: The Bouncing Heart Button */}
+              <button 
+                onClick={handleToggleSave}
+                title={isSaved ? "Remove from Saved" : "Save for Later"}
+                className={`px-5 py-3 rounded-xl font-bold text-xl transition-all duration-300 shadow-sm flex items-center justify-center transform border ${
+                  isAnimating ? 'scale-125 rotate-12' : 'hover:-translate-y-0.5 active:scale-90'
+                } ${
+                  isSaved 
+                    ? 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100' 
+                    : 'bg-white border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200'
+                }`}
+              >
+                {isSaved ? '❤️' : '🤍'}
+              </button>
+            </div>
           )}
         </div>
       </div>
 
-      {/* --- 🌟 NEW: SUGGESTIONS GRID 🌟 --- */}
       {suggestions.length > 0 && (
         <div className="mt-16">
           <h3 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">You Might Also Like</h3>
