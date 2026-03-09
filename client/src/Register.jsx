@@ -3,9 +3,9 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 function Register() {
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    email: '', 
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
     password: '',
     profilePicture: '' // 🌟 NEW
   });
@@ -40,17 +40,18 @@ function Register() {
     if (!emailRegex.test(formData.email)) {
       setError("Please enter a valid email address.");
       setLoading(false);
-      return; 
-    }
-
-    // 2. Validate Password 
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
-    if (!passwordRegex.test(formData.password)) {
-      setError("Password must be at least 8 characters long and include at least one letter and one number.");
-      setLoading(false);
       return;
     }
 
+    // 2. Strict Password Validation
+    // Minimum 8 chars, at least: 1 uppercase, 1 lowercase, 1 number, 1 special character
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    if (!passwordRegex.test(formData.password)) {
+      setError("Password must be at least 8 characters long and include: one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&).");
+      setLoading(false);
+      return;
+    }
     try {
       await axios.post('http://localhost:5001/api/auth/register', formData);
 
@@ -109,8 +110,10 @@ function Register() {
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Password</label>
             <input type="password" name="password" value={formData.password} onChange={handleChange} required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
-            {/* 🌟 NEW: Password Hint */}
-            <p className="text-xs text-gray-500 mt-2 font-medium">Must be at least 8 characters with 1 letter and 1 number.</p>
+            {/* 🌟 Updated Hint Text */}
+            <p className="text-xs text-gray-500 mt-2 font-medium leading-relaxed">
+              Minimum 8 characters with at least 1 uppercase, 1 lowercase, 1 number, and 1 symbol.
+            </p>
           </div>
 
           <div

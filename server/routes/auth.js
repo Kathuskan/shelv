@@ -6,7 +6,6 @@ const User = require('../models/user'); // Ensure this path matches your file st
 const router = express.Router();
 
 // 1. REGISTER ROUTE
-// 1. REGISTER ROUTE
 router.post('/register', async (req, res) => {
     try {
         // We now extract 'applySeller' from the frontend request
@@ -16,7 +15,10 @@ router.post('/register', async (req, res) => {
         if (existingUser) {
             return res.status(400).json({ message: "Email already in use" });
         }
-
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({ message: "Password does not meet security requirements." });
+        }
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -55,8 +57,8 @@ router.post('/login', async (req, res) => {
 
         // Generate the JWT (The digital ID card)
         const token = jwt.sign(
-            { id: user._id, role: user.role, status: user.sellerStatus }, 
-            process.env.JWT_SECRET, 
+            { id: user._id, role: user.role, status: user.sellerStatus },
+            process.env.JWT_SECRET,
             { expiresIn: '1d' } // Token expires in 1 day
         );
 
