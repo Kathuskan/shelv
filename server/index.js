@@ -4,6 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const passport = require('passport'); // 🌟 NEW: Import Passport
+const sendEmail = require('./utils/sendEmail');
 
 // Models
 const Book = require('./models/book'); 
@@ -247,24 +248,27 @@ app.post('/api/auth/verify-otp', authMiddleware, async (req, res) => {
 // GENERATE AND SEND OTP
 app.post('/api/auth/send-otp', authMiddleware, async (req, res) => {
     try {
-        const { phone } = req.body;
-        const otp = Math.floor(100000 + Math.random() * 900000).toString(); 
-        const userId = req.user.id || req.user._id;
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: "User not found" });
 
-        const user = await User.findByIdAndUpdate(userId, { 
-            verificationCode: otp,
-            sellerPhone: phone 
-        });
+        // 1. Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
+        // 2. Save OTP to Database
+        user.verificationCode = otp;
+        await user.save();
 
-        console.log(`\n📱 SMS TO ${phone}: Your Shelv Seller Verification Code is: ${otp}\n`);
-        res.status(200).json({ message: "Verification code sent!" });
+        // 3. 🌟 SEND THE ACTUAL EMAIL (Replacing the console.log)
+        const emailContent = `Hello ${user.name},\n\nYour Shelv Seller Verification code is: ${otp}\n\nIf you did not request this, please ignore this email.`;
+        
+        await sendEmail(user.email, "Shelv Seller Verification Code", emailContent);
+
+        console.log(`✅ Email sent to ${user.email} with OTP: ${otp}`);
+        res.status(200).json({ message: "Verification code sent to your email!" });
+
     } catch (err) {
-        console.error("❌ CRITICAL OTP ERROR:", err);
-        res.status(500).json({ message: err.message });
+        console.error("❌ NODEMAILER ERROR:", err);
+        res.status(500).json({ message: "Failed to send email. Check your server .env and App Password." });
     }
 });
 
