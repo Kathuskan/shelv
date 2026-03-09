@@ -11,6 +11,7 @@ import BookCard from './BookCard';
 import BookDetails from './BookDetails';
 import ApplySeller from './ApplySeller';
 import Profile from './Profile';
+import SocialSuccess from './SocialSuccess';
 
 
 // 1. The Home Component
@@ -324,6 +325,8 @@ function App() {
             element={user ? <ApplySeller /> : <Navigate to="/login" replace />}
           />
           <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" replace />} />
+          // inside your Routes
+          <Route path="/social-success" element={<SocialSuccess />} />
         </Routes>
       </div>
     </BrowserRouter>

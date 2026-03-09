@@ -22,7 +22,7 @@ function Login() {
 
       // 3. Force a hard refresh to update the global App state
       window.location.href = '/'; // <--- CHANGE THIS LINE
-      
+
     } catch (error) {
       console.error("Login error:", error);
       alert('Login failed. Please check your credentials.');
@@ -70,6 +70,26 @@ function Login() {
           >
             Sign In
           </button>
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-gray-500 font-medium">Or continue with</span>
+            </div>
+          </div>
+
+          <a
+            href="http://localhost:5001/api/auth/google"
+            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-3.5 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-[0.98]"
+          >
+            <img
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="Google"
+              className="w-5 h-5"
+            />
+            Continue with Google
+          </a>
         </form>
 
         {/* Moved this OUTSIDE the </form> tag */}

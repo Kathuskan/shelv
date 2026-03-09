@@ -1,9 +1,41 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const User = require('../models/user'); // Ensure this path matches your file structure
-
 const router = express.Router();
+const passport = require('passport');
+const jwt = require('jsonwebtoken');
+
+// 1. Start Google Login
+// When the user clicks "Continue with Google", they hit this route.
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get('/google/callback', 
+    passport.authenticate('google', { session: false, failureRedirect: 'http://localhost:5173/login' }),
+    (req, res) => {
+        // req.user contains the user from your MongoDB (found or created in passport.js)
+        
+        // Create our own JWT for the app
+        const token = jwt.sign(
+            { id: req.user._id, role: req.user.role }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '1d' }
+        );
+
+        // Prepare user data to send to frontend
+        const userObj = {
+            id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            profilePicture: req.user.profilePicture,
+            role: req.user.role,
+            sellerStatus: req.user.sellerStatus
+        };
+
+        // Redirect back to React with the token and user in the URL
+        const userData = encodeURIComponent(JSON.stringify(userObj));
+        res.redirect(`http://localhost:5173/social-success?token=${token}&user=${userData}`);
+    }
+);
 
 // 1. REGISTER ROUTE
 router.post('/register', async (req, res) => {

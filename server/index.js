@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const passport = require('passport'); // 🌟 NEW: Import Passport
 
 // Models
 const Book = require('./models/book'); 
@@ -18,9 +19,14 @@ const PORT = process.env.PORT || 5001;
 
 // --- 🌟 1. MIDDLEWARE (MUST GO FIRST) 🌟 ---
 app.use(cors());
-// Increase the limit to 50 megabytes so it can accept image strings
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
+
+// 🌟 NEW: Initialize Passport
+app.use(passport.initialize());
+
+// 🌟 NEW: Import and use the Passport Strategy Configuration
+require('./config/passport')(passport); 
 
 // --- 🌟 2. ROUTES (MUST GO AFTER MIDDLEWARE) 🌟 ---
 app.use('/api/user', require('./routes/user'));
