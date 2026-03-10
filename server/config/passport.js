@@ -1,20 +1,24 @@
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/user');
 
-module.exports = function(passport) {
+module.exports = function (passport) {
     passport.use(new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: "http://localhost:5001/api/auth/google/callback"
+
+        // 🌟 THE FIX: Use Render URL if it exists, otherwise use localhost
+        callbackURL: process.env.BACKEND_URL
+            ? `${process.env.BACKEND_URL}/api/auth/google/callback`
+            : "http://localhost:5001/api/auth/google/callback"
     },
     async (accessToken, refreshToken, profile, done) => {
         try {
             // 1. Check if user already exists by their Google ID or Email
-            let user = await User.findOne({ 
+            let user = await User.findOne({
                 $or: [
                     { googleId: profile.id },
                     { email: profile.emails[0].value }
-                ] 
+                ]
             });
 
             if (user) {
@@ -35,7 +39,7 @@ module.exports = function(passport) {
                     profilePicture: profile.photos[0].value,
                     // Since it's Google Auth, we don't need a password
                     // We can set a random one or leave it blank if your model allows
-                    password: Math.random().toString(36).slice(-10) 
+                    password: Math.random().toString(36).slice(-10)
                 });
 
                 await newUser.save();
