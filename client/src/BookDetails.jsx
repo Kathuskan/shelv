@@ -11,19 +11,19 @@ function BookDetails() {
   const [suggestions, setSuggestions] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [showContact, setShowContact] = useState(false);
-  
   const [isSaved, setIsSaved] = useState(false); 
-  
-  // 🌟 NEW: State to trigger the heart animation
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // 🌟 NEW: State to track which image is showing in the gallery
+  const [mainImageIndex, setMainImageIndex] = useState(0);
+
   const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     window.scrollTo(0, 0);
     setShowContact(false); 
     setLoading(true);
+    setMainImageIndex(0); // Reset gallery to first image when a new book loads
 
     const fetchData = async () => {
       try {
@@ -66,9 +66,8 @@ function BookDetails() {
     }
 
     try {
-      // 🌟 Trigger the "Pop" animation instantly
       setIsAnimating(true);
-      setTimeout(() => setIsAnimating(false), 300); // Turn it off after 300ms
+      setTimeout(() => setIsAnimating(false), 300); 
 
       setIsSaved(!isSaved);
 
@@ -86,21 +85,51 @@ function BookDetails() {
   if (loading) return <div className="text-center py-20 text-indigo-600 font-bold text-xl animate-pulse">Loading Book Details...</div>;
   if (!book) return <div className="text-center py-20 text-red-500 font-bold text-xl">Book not found.</div>;
 
+  // Helper variable to grab the active image safely
+  const activeImage = book.images && book.images.length > 0 
+    ? book.images[mainImageIndex] 
+    : (book.image || 'https://via.placeholder.com/400x600?text=No+Cover');
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <Link to="/" className="text-indigo-600 font-semibold hover:underline mb-6 inline-block">&larr; Back to Inventory</Link>
       
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row">
         
-        <div className="md:w-1/2 bg-gray-50 p-6 flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-100">
-          <img 
-            src={book.image} 
-            alt={book.title} 
-            className="max-w-full max-h-[400px] object-contain drop-shadow-md"
-            onError={(e) => { e.target.src = 'https://via.placeholder.com/400x600?text=No+Cover' }} 
-          />
+        {/* --- 📸 IMAGE GALLERY SECTION --- */}
+        <div className="md:w-1/2 bg-gray-50 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-gray-100">
+          
+          {/* Main Large Image */}
+          <div className="w-full flex items-center justify-center h-[400px] mb-4">
+            <img 
+              src={activeImage} 
+              alt={book.title} 
+              className="max-w-full max-h-full object-contain drop-shadow-md transition-opacity duration-300"
+              onError={(e) => { e.target.src = 'https://via.placeholder.com/400x600?text=No+Cover' }} 
+            />
+          </div>
+
+          {/* Thumbnail Slider (Only shows if there are multiple images) */}
+          {book.images && book.images.length > 1 && (
+            <div className="flex gap-3 overflow-x-auto py-2 w-full justify-center px-2">
+              {book.images.map((imgUrl, index) => (
+                <button 
+                  key={index}
+                  onClick={() => setMainImageIndex(index)}
+                  className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                    mainImageIndex === index 
+                      ? 'border-indigo-600 shadow-md scale-105' 
+                      : 'border-transparent opacity-60 hover:opacity-100 hover:scale-100'
+                  }`}
+                >
+                  <img src={imgUrl} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* --- 📝 BOOK DETAILS SECTION --- */}
         <div className="md:w-1/2 p-6 lg:p-8 flex flex-col">
           <div className="flex gap-2 mb-4">
             <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide ${book.listingType === 'Rent' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
@@ -167,7 +196,6 @@ function BookDetails() {
                 Contact Seller
               </button>
               
-              {/* 🌟 NEW: The Bouncing Heart Button */}
               <button 
                 onClick={handleToggleSave}
                 title={isSaved ? "Remove from Saved" : "Save for Later"}
