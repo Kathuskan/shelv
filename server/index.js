@@ -9,6 +9,7 @@ const sendEmail = require('./utils/sendEmail');
 // Models
 const Book = require('./models/book'); 
 const User = require('./models/user'); 
+const { upload, cloudinary, uploadProfile } = require('./config/cloudinary');
 
 // Middleware & Routes
 const authMiddleware = require('./middleware/authMiddleware');
@@ -50,10 +51,13 @@ app.get('/api/books' , async (req, res) => {
 });
 
 // POST ROUTE: Add a new book (Must be Approved Seller)
-app.post('/api/books', authMiddleware, isApprovedSeller, async (req, res) => {
+// POST ROUTE: Add a new book
+app.post('/api/books', authMiddleware, isApprovedSeller, upload.single('image'), async (req, res) => {
     try {
         const newBook = new Book({
             ...req.body,
+            // 🌟 Use the Cloudinary URL instead of a local path
+            image: req.file ? req.file.path : "", 
             seller: req.user.id 
         });
         await newBook.save();
@@ -66,8 +70,14 @@ app.post('/api/books', authMiddleware, isApprovedSeller, async (req, res) => {
 // DELETE ROUTE: Only Admins can delete
 app.delete('/api/books/:id', authMiddleware, isAdmin, async (req, res) => {
     try {
+        const book = await Book.findById(req.params.id);
+        if (book && book.image) {
+            const publicId = book.image.split('/').slice(-2).join('/').split('.')[0];
+            await cloudinary.uploader.destroy(publicId);
+        }
+
         await Book.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: "Book deleted" });
+        res.status(200).json({ message: "Book and cloud image deleted by admin" });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -167,11 +177,20 @@ app.get('/api/seller/books', authMiddleware, isApprovedSeller, async (req, res) 
 // SELLER ROUTE: Seller deletes their own book
 app.delete('/api/seller/books/:id', authMiddleware, isApprovedSeller, async (req, res) => {
     try {
+        // Find the book first to get the image URL
         const book = await Book.findOne({ _id: req.params.id, seller: req.user.id });
         if (!book) return res.status(404).json({ message: "Book not found or unauthorized" });
 
+        // If an image exists, delete it from Cloudinary
+        if (book.image) {
+            // Extract the public_id (folder/filename) from the URL
+            const publicId = book.image.split('/').slice(-2).join('/').split('.')[0];
+            await cloudinary.uploader.destroy(publicId);
+            console.log(`🗑️ Cloudinary image deleted: ${publicId}`);
+        }
+
         await Book.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: "Your listing was deleted" });
+        res.status(200).json({ message: "Your listing and image were deleted" });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -269,6 +288,38 @@ app.post('/api/auth/send-otp', authMiddleware, async (req, res) => {
     } catch (err) {
         console.error("❌ NODEMAILER ERROR:", err);
         res.status(500).json({ message: "Failed to send email. Check your server .env and App Password." });
+    }
+});
+
+// --- 🌟 UPDATE PROFILE IMAGE ROUTE 🌟 ---
+app.put('/api/user/profile-image', authMiddleware, uploadProfile.single('image'), async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // 1. Delete old profile image from Cloudinary if it exists
+        if (user.profilePicture && user.profilePicture.includes('cloudinary')) {
+            try {
+                // Extract publicId (e.g., shelv_profiles/abc123)
+                const publicId = user.profilePicture.split('/').slice(-2).join('/').split('.')[0];
+                await cloudinary.uploader.destroy(publicId);
+                console.log(`🗑️ Old profile image deleted: ${publicId}`);
+            } catch (clError) {
+                console.error("Cloudinary Delete Error (Non-critical):", clError);
+            }
+        }
+
+        // 2. Update user with new Cloudinary URL
+        user.profilePicture = req.file.path;
+        await user.save();
+
+        res.status(200).json({ 
+            message: "Profile image updated successfully!", 
+            profilePicture: user.profilePicture 
+        });
+    } catch (err) {
+        console.error("Profile Upload Error:", err);
+        res.status(500).json({ message: "Failed to upload profile image." });
     }
 });
 
