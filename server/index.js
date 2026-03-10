@@ -7,7 +7,7 @@ const passport = require('passport'); // 🌟 NEW: Import Passport
 const sendEmail = require('./utils/sendEmail');
 
 // Models
-const Book = require('./models/book'); 
+const Book = require('./models/Book'); 
 const User = require('./models/user'); 
 const { upload, cloudinary, uploadProfile } = require('./config/cloudinary');
 
