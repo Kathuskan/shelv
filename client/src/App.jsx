@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
+// 🌟 NEW: We import our custom axios file instead of the default one!
+import axios from './api/axios'; 
+
 import AddBook from './AddBook';
 import Login from './Login';
 import Admin from './Admin';
@@ -12,7 +14,6 @@ import BookDetails from './BookDetails';
 import ApplySeller from './ApplySeller';
 import Profile from './Profile';
 import SocialSuccess from './SocialSuccess';
-
 
 // 1. The Home Component
 function Home() {
@@ -32,7 +33,8 @@ function Home() {
   ];
 
   useEffect(() => {
-    axios.get('http://localhost:5001/api/books')
+    // 🌟 REMOVED LOCALHOST: Now it just asks for the route!
+    axios.get('/api/books')
       .then(response => {
         setBooks(response.data);
         setLoading(false);
@@ -43,7 +45,6 @@ function Home() {
       });
   }, []);
 
-  // 1. Apply top-level search and dropdown filters
   const filteredBooks = books.filter((book) => {
     const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       book.author.toLowerCase().includes(searchTerm.toLowerCase());
@@ -53,14 +54,11 @@ function Home() {
     return matchesSearch && matchesType && matchesCondition;
   });
 
-  // 2. Get the 8 most recently added books (reversing the array so newest are first)
   const recentBooks = [...filteredBooks].reverse().slice(0, 8);
 
-  // 3. Smooth Scroll Function for Quick Navigation
   const scrollToCategory = (categoryName) => {
     const element = document.getElementById(`category-${categoryName}`);
     if (element) {
-      // Offset slightly so the navbar doesn't cover the title
       const yOffset = -100;
       const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
@@ -69,8 +67,6 @@ function Home() {
 
   return (
     <div className="w-full">
-      {/* --- SLEEK FULL-WIDTH CATEGORY BAR --- */}
-      {/* FIXED: Moved outside the max-w container so it stretches edge-to-edge on ALL screens */}
       <div className="sticky top-19 z-50 bg-indigo-600 shadow-inner overflow-x-auto scrollbar-hide">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-8 py-3 min-w-max">
@@ -82,7 +78,6 @@ function Home() {
                 <button
                   key={`nav-${category}`}
                   onClick={() => scrollToCategory(category)}
-                  // FIXED: Changed to text-indigo-100 and hover:text-white for a smooth hover effect
                   className="whitespace-nowrap text-sm font-semibold tracking-wide text-white hover:text-white transition-colors"
                 >
                   {category}
@@ -93,11 +88,7 @@ function Home() {
         </div>
       </div>
 
-      {/* --- MAIN CONTENT AREA --- */}
-      {/* FIXED: Added py-8 back to restore the proper breathing room */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {/* --- TOP HEADER & SEARCH BAR --- */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h2 className="text-3xl font-bold text-gray-900">Marketplace</h2>
@@ -135,7 +126,6 @@ function Home() {
           </div>
         </div>
 
-        {/* --- DYNAMIC BOOK SECTIONS --- */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -151,8 +141,6 @@ function Home() {
               </div>
             ) : (
               <div className="space-y-16">
-
-                {/* --- SECTION: RECENT LISTINGS --- */}
                 {recentBooks.length > 0 && (
                   <section>
                     <h3 className="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">🌟 Recently Added</h3>
@@ -164,10 +152,8 @@ function Home() {
                   </section>
                 )}
 
-                {/* --- SECTIONS: CATEGORY WISE LISTINGS --- */}
                 {categories.map((category) => {
                   const booksInCategory = filteredBooks.filter(book => book.category === category);
-
                   if (booksInCategory.length === 0) return null;
 
                   return (
@@ -183,7 +169,6 @@ function Home() {
                     </section>
                   );
                 })}
-
               </div>
             )}
           </>
@@ -192,7 +177,6 @@ function Home() {
     </div>
   );
 }
-
 
 // 2. The Main App Component
 function App() {
@@ -208,7 +192,8 @@ function App() {
   const requestSellerAccount = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put('http://localhost:5001/api/auth/request-seller', {}, {
+      // 🌟 REMOVED LOCALHOST
+      await axios.put('/api/auth/request-seller', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert("Application submitted!");
@@ -240,10 +225,7 @@ function App() {
 
                 <div className="ml-4 border-l pl-6 border-gray-300 flex items-center gap-4">
                   <div className="flex flex-col items-end">
-                    {/* --- 🌟 NEW: AVATAR NAVBAR LINK 🌟 --- */}
                     <Link to="/profile" className="flex items-center gap-2.5 hover:opacity-80 transition-all p-1 pr-3 rounded-full hover:bg-indigo-50 border border-transparent hover:border-indigo-100">
-
-                      {/* The Picture or Initials */}
                       <div className="h-9 w-9 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-black text-white shadow-sm border-2 border-white overflow-hidden flex-shrink-0">
                         {user.profilePicture ? (
                           <img src={user.profilePicture} alt="Avatar" className="h-full w-full object-cover" />
@@ -251,15 +233,11 @@ function App() {
                           initials
                         )}
                       </div>
-
-                      {/* The Greeting (Hidden on super tiny mobile screens to save space) */}
                       <span className="text-sm font-bold text-indigo-700 hidden sm:block">
                         Hi, {user.name?.split(' ')[0]}
                       </span>
-
                     </Link>
-                    {/* ------------------------------------- */}
-                    {/* REPLACED: Now links to the verification page instead of an instant API call */}
+
                     {user?.sellerStatus === 'none' && user?.role !== 'admin' && (
                       <Link to="/apply-seller" className="text-[10px] bg-amber-500 hover:bg-amber-600 transition-colors text-white px-3 py-1 rounded-full mt-1 font-bold tracking-wide uppercase">
                         Become a Seller
@@ -319,13 +297,13 @@ function App() {
                 : <Navigate to="/" replace />
             }
           />
-          {/* VERIFICATION ROUTE */}
           <Route
             path="/apply-seller"
             element={user ? <ApplySeller /> : <Navigate to="/login" replace />}
           />
           <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" replace />} />
-          // inside your Routes
+          
+          {/* 🌟 FIXED: Removed the invalid // comment syntax from inside the JSX routes */}
           <Route path="/social-success" element={<SocialSuccess />} />
         </Routes>
       </div>

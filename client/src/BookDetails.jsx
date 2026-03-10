@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+// 🌟 NEW: Import the custom instance
+import axios from './api/axios'; 
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import BookCard from './BookCard';
 
@@ -13,8 +14,6 @@ function BookDetails() {
   const [showContact, setShowContact] = useState(false);
   const [isSaved, setIsSaved] = useState(false); 
   const [isAnimating, setIsAnimating] = useState(false);
-
-  // 🌟 NEW: State to track which image is showing in the gallery
   const [mainImageIndex, setMainImageIndex] = useState(0);
 
   const token = localStorage.getItem('token');
@@ -23,23 +22,24 @@ function BookDetails() {
     window.scrollTo(0, 0);
     setShowContact(false); 
     setLoading(true);
-    setMainImageIndex(0); // Reset gallery to first image when a new book loads
+    setMainImageIndex(0); 
 
     const fetchData = async () => {
       try {
-        const bookResponse = await axios.get(`http://localhost:5001/api/books/${id}`);
+        // 🌟 REMOVED LOCALHOST calls
+        const bookResponse = await axios.get(`/api/books/${id}`);
         const currentBook = bookResponse.data;
         setBook(currentBook);
 
         if (token) {
-          const savedRes = await axios.get('http://localhost:5001/api/user/saved-books', {
+          const savedRes = await axios.get('/api/user/saved-books', {
             headers: { Authorization: `Bearer ${token}` }
           });
           const alreadySaved = savedRes.data.some(savedBook => savedBook._id === id);
           setIsSaved(alreadySaved);
         }
 
-        const allBooksResponse = await axios.get(`http://localhost:5001/api/books`);
+        const allBooksResponse = await axios.get(`/api/books`);
         const allBooks = allBooksResponse.data;
 
         const otherBooks = allBooks.filter(b => b._id !== currentBook._id);
@@ -71,7 +71,8 @@ function BookDetails() {
 
       setIsSaved(!isSaved);
 
-      await axios.post('http://localhost:5001/api/user/save-book', 
+      // 🌟 REMOVED LOCALHOST
+      await axios.post('/api/user/save-book', 
         { bookId: id }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -85,7 +86,6 @@ function BookDetails() {
   if (loading) return <div className="text-center py-20 text-indigo-600 font-bold text-xl animate-pulse">Loading Book Details...</div>;
   if (!book) return <div className="text-center py-20 text-red-500 font-bold text-xl">Book not found.</div>;
 
-  // Helper variable to grab the active image safely
   const activeImage = book.images && book.images.length > 0 
     ? book.images[mainImageIndex] 
     : (book.image || 'https://via.placeholder.com/400x600?text=No+Cover');
@@ -96,10 +96,7 @@ function BookDetails() {
       
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row">
         
-        {/* --- 📸 IMAGE GALLERY SECTION --- */}
         <div className="md:w-1/2 bg-gray-50 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-gray-100">
-          
-          {/* Main Large Image */}
           <div className="w-full flex items-center justify-center h-[400px] mb-4">
             <img 
               src={activeImage} 
@@ -109,7 +106,6 @@ function BookDetails() {
             />
           </div>
 
-          {/* Thumbnail Slider (Only shows if there are multiple images) */}
           {book.images && book.images.length > 1 && (
             <div className="flex gap-3 overflow-x-auto py-2 w-full justify-center px-2">
               {book.images.map((imgUrl, index) => (
@@ -129,7 +125,6 @@ function BookDetails() {
           )}
         </div>
 
-        {/* --- 📝 BOOK DETAILS SECTION --- */}
         <div className="md:w-1/2 p-6 lg:p-8 flex flex-col">
           <div className="flex gap-2 mb-4">
             <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide ${book.listingType === 'Rent' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>

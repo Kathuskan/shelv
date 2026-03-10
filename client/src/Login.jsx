@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom'; // <--- Added Link here!
+// 🌟 NEW: Import your custom axios instance
+import axios from './api/axios'; 
+import { useNavigate, Link } from 'react-router-dom';
 
 function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const navigate = useNavigate();
+
+  // 🌟 NEW: We grab the live URL (if hosted) or fall back to localhost
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -13,15 +17,13 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5001/api/auth/login', formData);
+      // 🌟 REMOVED LOCALHOST
+      const response = await axios.post('/api/auth/login', formData);
 
-      // 1. Save the digital ID card (JWT) to the browser
       localStorage.setItem('token', response.data.token);
-      // 2. Save the user's basic info
       localStorage.setItem('user', JSON.stringify(response.data.user));
 
-      // 3. Force a hard refresh to update the global App state
-      window.location.href = '/'; // <--- CHANGE THIS LINE
+      window.location.href = '/'; 
 
     } catch (error) {
       console.error("Login error:", error);
@@ -79,8 +81,9 @@ function Login() {
             </div>
           </div>
 
+          {/* 🌟 FIXED: Dynamically injects the correct backend URL for Google OAuth */}
           <a
-            href="http://localhost:5001/api/auth/google"
+            href={`${backendUrl}/api/auth/google`}
             className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-3.5 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-[0.98]"
           >
             <img
@@ -92,7 +95,6 @@ function Login() {
           </a>
         </form>
 
-        {/* Moved this OUTSIDE the </form> tag */}
         <div className="mt-6 text-center text-sm text-gray-500">
           Don't have an account yet?{' '}
           <Link to="/register" className="text-indigo-600 font-bold hover:underline">

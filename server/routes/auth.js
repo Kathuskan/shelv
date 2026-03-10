@@ -9,12 +9,12 @@ const jwt = require('jsonwebtoken');
 // When the user clicks "Continue with Google", they hit this route.
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-router.get('/google/callback', 
+router.get('/google/callback',
     passport.authenticate('google', { session: false, failureRedirect: 'http://localhost:5173/login' }),
     (req, res) => {
         const token = jwt.sign(
-            { id: req.user._id, role: req.user.role }, 
-            process.env.JWT_SECRET, 
+            { id: req.user._id, role: req.user.role },
+            process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
 
@@ -28,7 +28,8 @@ router.get('/google/callback',
         };
 
         const userData = encodeURIComponent(JSON.stringify(userObj));
-        res.redirect(`http://localhost:5173/social-success?token=${token}&user=${userData}`);
+        const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+        res.redirect(`${CLIENT_URL}/social-success?token=${token}&user=${userData}`);
     }
 );
 
