@@ -7,18 +7,20 @@ function Register() {
     name: '',
     email: '',
     password: '',
-    profilePicture: '' // 🌟 NEW
+    profilePicture: '' 
   });
 
   const [wantToSell, setWantToSell] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // 🌟 NEW: Grab the live backend URL for the Google button
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 🌟 NEW: Convert image to Base64 string instantly
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -35,7 +37,6 @@ function Register() {
     setLoading(true);
     setError('');
 
-    // 1. Validate Email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError("Please enter a valid email address.");
@@ -43,19 +44,19 @@ function Register() {
       return;
     }
 
-    // 2. Strict Password Validation
-    // Minimum 8 chars, at least: 1 uppercase, 1 lowercase, 1 number, 1 special character
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
     if (!passwordRegex.test(formData.password)) {
       setError("Password must be at least 8 characters long and include: one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&).");
       setLoading(false);
       return;
     }
-    try {
-      await axios.post('http://localhost:5001/api/auth/register', formData);
 
-      const loginRes = await axios.post('http://localhost:5001/api/auth/login', {
+    try {
+      // 🌟 REMOVED LOCALHOST #1
+      await axios.post('/api/auth/register', formData);
+
+      // 🌟 REMOVED LOCALHOST #2
+      const loginRes = await axios.post('/api/auth/login', {
         email: formData.email,
         password: formData.password
       });
@@ -86,7 +87,6 @@ function Register() {
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm font-bold text-center border border-red-100">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* 🌟 NEW: Profile Picture Upload */}
           <div className="flex flex-col items-center justify-center mb-4">
             <div className="h-24 w-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 overflow-hidden flex items-center justify-center mb-3 relative group">
               {formData.profilePicture ? (
@@ -110,7 +110,6 @@ function Register() {
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Password</label>
             <input type="password" name="password" value={formData.password} onChange={handleChange} required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
-            {/* 🌟 Updated Hint Text */}
             <p className="text-xs text-gray-500 mt-2 font-medium leading-relaxed">
               Minimum 8 characters with at least 1 uppercase, 1 lowercase, 1 number, and 1 symbol.
             </p>
@@ -137,8 +136,9 @@ function Register() {
             </div>
           </div>
 
+          {/* 🌟 REMOVED LOCALHOST #3 */}
           <a
-            href="http://localhost:5001/api/auth/google"
+            href={`${backendUrl}/api/auth/google`}
             className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-3.5 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-[0.98]"
           >
             <img
@@ -148,7 +148,8 @@ function Register() {
             />
             Continue with Google
           </a>
-          <button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all shadow-md transform hover:-translate-y-0.5">
+          
+          <button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all shadow-md transform hover:-translate-y-0.5 mt-4">
             {loading ? 'Creating Account...' : (wantToSell ? 'Continue to Verification \u2192' : 'Create Account')}
           </button>
 
