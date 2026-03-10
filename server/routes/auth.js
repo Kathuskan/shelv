@@ -12,26 +12,21 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 router.get('/google/callback', 
     passport.authenticate('google', { session: false, failureRedirect: 'http://localhost:5173/login' }),
     (req, res) => {
-        // req.user contains the user from your MongoDB (found or created in passport.js)
-        
-        // Create our own JWT for the app
         const token = jwt.sign(
             { id: req.user._id, role: req.user.role }, 
             process.env.JWT_SECRET, 
             { expiresIn: '1d' }
         );
 
-        // Prepare user data to send to frontend
+        // 🌟 THE FIX: Remove profilePicture from this object
         const userObj = {
             id: req.user._id,
             name: req.user.name,
             email: req.user.email,
-            profilePicture: req.user.profilePicture,
             role: req.user.role,
             sellerStatus: req.user.sellerStatus
         };
 
-        // Redirect back to React with the token and user in the URL
         const userData = encodeURIComponent(JSON.stringify(userObj));
         res.redirect(`http://localhost:5173/social-success?token=${token}&user=${userData}`);
     }

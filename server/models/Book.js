@@ -35,10 +35,10 @@ const bookSchema = new mongoose.Schema({
         ref: 'User',
         required: true // Now enforced! Every book MUST have a verified seller.
     },
-    image: { 
-        type: String, 
-        required: true 
-    }
+    images: [{
+        type: String,
+        required: true
+    }],
 }, { timestamps: true });
 
 const Book = mongoose.model('Book', bookSchema);

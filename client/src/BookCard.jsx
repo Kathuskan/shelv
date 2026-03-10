@@ -3,17 +3,16 @@ import { Link } from 'react-router-dom';
 function BookCard({ book, children }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300 w-full h-full">
-      
+
       {/* WRAP THE TOP HALF IN A LINK */}
       <Link to={`/book/${book._id}`} className="flex-grow flex flex-col cursor-pointer">
-        
+
         {/* 1. The Image */}
         <div className="h-64 w-full bg-gray-50 flex-shrink-0 border-b border-gray-100 p-4 flex items-center justify-center">
-          <img 
-            src={book.image} 
-            alt={book.title} 
-            className="max-w-full max-h-full object-contain drop-shadow-md"
-            onError={(e) => { e.target.src = 'https://via.placeholder.com/300x400?text=No+Cover' }} 
+          {/* This grabs the very first image in the array safely */}
+          <img
+            src={book.images && book.images.length > 0 ? book.images[0] : 'https://via.placeholder.com/300x400?text=No+Cover'}
+            alt={book.title}
           />
         </div>
 
@@ -29,7 +28,7 @@ function BookCard({ book, children }) {
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-1 leading-tight">{book.title}</h3>
           <p className="text-gray-500 text-sm mb-4">by {book.author}</p>
-          
+
           {/* --- 🌟 ONLY THIS PRICE BLOCK WAS UPDATED 🌟 --- */}
           <div className="mt-auto pt-4 border-t border-gray-100 min-h-[4.5rem] flex flex-col justify-center">
             {book.listingType === 'Rent' ? (
@@ -49,7 +48,7 @@ function BookCard({ book, children }) {
             )}
           </div>
           {/* ----------------------------------------------- */}
-          
+
         </div>
       </Link>
 

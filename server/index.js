@@ -51,37 +51,53 @@ app.get('/api/books' , async (req, res) => {
 });
 
 // POST ROUTE: Add a new book (Must be Approved Seller)
-// POST ROUTE: Add a new book
-app.post('/api/books', authMiddleware, isApprovedSeller, upload.single('image'), async (req, res) => {
+app.post('/api/books', authMiddleware, isApprovedSeller, upload.array('images', 5), async (req, res) => {
     try {
+        // req.files is now an array of uploaded files
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ message: "At least one image is required." });
+        }
+
+        // Map through the files to get all their Cloudinary URLs
+        const imageUrls = req.files.map(file => file.path);
+
         const newBook = new Book({
             ...req.body,
-            // 🌟 Use the Cloudinary URL instead of a local path
-            image: req.file ? req.file.path : "", 
+            images: imageUrls, // Save the array of URLs
             seller: req.user.id 
         });
+
         await newBook.save();
         res.status(201).json(newBook);
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        console.error("Upload Error:", err);
+        res.status(400).json({ message: "Failed to upload images or save book." });
     }
 });
 
-// DELETE ROUTE: Only Admins can delete
-app.delete('/api/books/:id', authMiddleware, isAdmin, async (req, res) => {
+
+// --- 🌟 UPDATED SELLER DELETE ROUTE (Delete multiple images) 🌟 ---
+app.delete('/api/seller/books/:id', authMiddleware, isApprovedSeller, async (req, res) => {
     try {
-        const book = await Book.findById(req.params.id);
-        if (book && book.image) {
-            const publicId = book.image.split('/').slice(-2).join('/').split('.')[0];
-            await cloudinary.uploader.destroy(publicId);
+        const book = await Book.findOne({ _id: req.params.id, seller: req.user.id });
+        if (!book) return res.status(404).json({ message: "Book not found or unauthorized" });
+
+        // Loop through all images and delete them from Cloudinary
+        if (book.images && book.images.length > 0) {
+            for (const imageUrl of book.images) {
+                const publicId = imageUrl.split('/').slice(-2).join('/').split('.')[0];
+                await cloudinary.uploader.destroy(publicId);
+                console.log(`🗑️ Deleted from Cloudinary: ${publicId}`);
+            }
         }
 
         await Book.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: "Book and cloud image deleted by admin" });
+        res.status(200).json({ message: "Listing and all images deleted." });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
+
 
 // ADMIN: Fetch all pending sellers
 app.get('/api/admin/pending-sellers', authMiddleware, isAdmin, async (req, res) => {

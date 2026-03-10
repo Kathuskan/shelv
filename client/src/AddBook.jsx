@@ -19,8 +19,8 @@ function AddBook() {
   });
 
   // 🌟 NEW: Separate state for Cloudinary file & UI Preview
-  const [imageFile, setImageFile] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -32,24 +32,54 @@ function AddBook() {
     });
   };
 
-  // 🌟 UPDATED: Handles the file for Cloudinary + creates a preview URL
+  // 2. The New Multiple Upload Handler
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+    // Convert the FileList object to an actual Array
+    const files = Array.from(e.target.files);
 
-    if (file) {
-      const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    if (files.length === 0) return;
 
-      if (!validTypes.includes(file.type)) {
-        alert("Please upload a valid web image (JPG, PNG, or WebP).");
-        e.target.value = ''; 
-        return; 
-      }
-
-      setImageFile(file); // Save raw file for FormData
-      setPreview(URL.createObjectURL(file)); // Show preview to user
+    // Check minimum and maximum
+    if (files.length > 5) {
+      alert("You can only upload a maximum of 5 images.");
+      e.target.value = ''; // Reset input
+      return;
     }
-  };
 
+    // Validate file types
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    const allValid = files.every(file => validTypes.includes(file.type));
+
+    if (!allValid) {
+      alert("Please upload valid web images only (JPG, PNG, WebP).");
+      e.target.value = '';
+      return;
+    }
+
+    setImageFiles(files);
+
+    // Create an array of preview URLs
+    const filePreviews = files.map(file => URL.createObjectURL(file));
+    setPreviews(filePreviews);
+  };
+  // 🌟 NEW: Moves the clicked image to the front of the array (Index 0)
+  const setAsCover = (index) => {
+    if (index === 0) return; // It's already the cover!
+
+    const updatedFiles = [...imageFiles];
+    const updatedPreviews = [...previews];
+
+    // Remove the selected item and grab it
+    const [selectedFile] = updatedFiles.splice(index, 1);
+    const [selectedPreview] = updatedPreviews.splice(index, 1);
+
+    // Put it at the very beginning
+    updatedFiles.unshift(selectedFile);
+    updatedPreviews.unshift(selectedPreview);
+
+    setImageFiles(updatedFiles);
+    setPreviews(updatedPreviews);
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -57,31 +87,40 @@ function AddBook() {
     // --- SRI LANKAN PHONE NUMBER LOGIC ---
     const cleanPhone = formData.contactPhone.replace(/[\s-]/g, '');
     const phoneRegex = /^07\d{8}$/;
-    
+
     if (!phoneRegex.test(cleanPhone)) {
       alert("Please enter a valid 10-digit Sri Lankan phone number (e.g., 071 234 5678).");
       setLoading(false);
       return;
     }
 
+    if (imageFiles.length === 0) {
+      alert("Please select at least 1 image.");
+      setLoading(false);
+      return;
+    }
+
     // --- 🌟 PREPARE FORMDATA FOR CLOUDINARY ---
     const data = new FormData();
-    data.append('image', imageFile); // Key must match upload.single('image') on backend
-    data.append('title', formData.title);
-    data.append('author', formData.author);
-    data.append('isbn', formData.isbn);
-    data.append('category', formData.category);
-    data.append('listingType', formData.listingType);
-    data.append('condition', formData.condition);
-    data.append('price', formData.price);
-    data.append('description', formData.description);
-    data.append('contactEmail', formData.contactEmail);
-    data.append('contactPhone', cleanPhone);
 
-    if (formData.listingType === 'Rent') {
-      data.append('rentalPeriod', formData.rentalPeriod);
-      data.append('extraDayPrice', formData.extraDayPrice);
-    }
+    // 1. Append the images
+    imageFiles.forEach(file => {
+      data.append('images', file);
+    });
+
+    // 2. Append the text fields (EXACTLY ONCE!)
+    Object.keys(formData).forEach(key => {
+      // Skip rental fields if it's a sale
+      if (formData.listingType === 'Sale' && (key === 'rentalPeriod' || key === 'extraDayPrice')) {
+        return;
+      }
+
+      if (key === 'contactPhone') {
+        data.append(key, cleanPhone);
+      } else {
+        data.append(key, formData[key]);
+      }
+    });
 
     try {
       const token = localStorage.getItem('token');
@@ -92,13 +131,13 @@ function AddBook() {
       }
 
       await axios.post('http://localhost:5001/api/books', data, {
-        headers: { 
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}` 
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
         }
       });
 
-      alert('📚 Book listed on Cloud successfully!');
+      alert('📚 Book listed successfully!');
       navigate('/');
 
     } catch (error) {
@@ -108,6 +147,7 @@ function AddBook() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
@@ -136,7 +176,7 @@ function AddBook() {
               <input type="text" name="isbn" value={formData.isbn} onChange={handleChange} required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. 978-0262033848" />
             </div>
-            
+
             <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-2">Book Category</label>
               <select name="category" value={formData.category} onChange={handleChange} required
@@ -154,7 +194,7 @@ function AddBook() {
                 <option value="Finance">Finance</option>
               </select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Listing Type</label>
               <select name="listingType" value={formData.listingType} onChange={handleChange}
@@ -199,17 +239,49 @@ function AddBook() {
               </div>
             )}
 
+            {/* 4. Update the JSX Input and Previews in the return statement */}
             <div className="col-span-1 md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Image</label>
-              <input type="file" onChange={handleImageUpload} required
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
-              {preview && (
-                <div className="mt-4 p-2 border rounded-2xl w-32 h-32 overflow-hidden bg-gray-50">
-                    <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Upload Images (Min 1, Max 5)
+              </label>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImageUpload}
+                required
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              />
+
+              {/* Display Image Previews as a Grid */}
+              {/* Display Image Previews as a Grid */}
+              {previews.length > 0 && (
+                <div className="mt-4 grid grid-cols-3 md:grid-cols-5 gap-4">
+                  {previews.map((src, index) => (
+                    <div key={index} className="relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-indigo-200 transition-all">
+                      <img src={src} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+
+                      {/* Cover Badge */}
+                      {index === 0 ? (
+                        <span className="absolute bottom-0 left-0 right-0 bg-indigo-600 bg-opacity-90 text-white text-[10px] text-center py-1 font-bold">
+                          Cover Image
+                        </span>
+                      ) : (
+                        /* Make Cover Button (Only shows on non-cover images) */
+                        <button
+                          type="button"
+                          onClick={() => setAsCover(index)}
+                          className="absolute top-1 right-1 bg-white/90 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded shadow hover:bg-indigo-600 hover:text-white transition-colors"
+                        >
+                          Set Cover
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-            
+
             <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-2">Book Description</label>
               <textarea name="description" value={formData.description} onChange={handleChange} required rows="3"
