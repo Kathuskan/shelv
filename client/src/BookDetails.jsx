@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
-// 🌟 NEW: Import the custom instance
 import axios from './api/axios'; 
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import BookCard from './BookCard';
+import { loadStripe } from '@stripe/stripe-js';
+
+// Initialize Stripe with your public key
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK);
 
 function BookDetails() {
   const { id } = useParams();
@@ -15,6 +18,8 @@ function BookDetails() {
   const [isSaved, setIsSaved] = useState(false); 
   const [isAnimating, setIsAnimating] = useState(false);
   const [mainImageIndex, setMainImageIndex] = useState(0);
+  
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   const token = localStorage.getItem('token');
 
@@ -26,35 +31,45 @@ function BookDetails() {
 
     const fetchData = async () => {
       try {
-        // 🌟 REMOVED LOCALHOST calls
+        // 1. Fetch main book and show it instantly
         const bookResponse = await axios.get(`/api/books/${id}`);
         const currentBook = bookResponse.data;
         setBook(currentBook);
 
-        if (token) {
-          const savedRes = await axios.get('/api/user/saved-books', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const alreadySaved = savedRes.data.some(savedBook => savedBook._id === id);
-          setIsSaved(alreadySaved);
-        }
-
-        const allBooksResponse = await axios.get(`/api/books`);
-        const allBooks = allBooksResponse.data;
-
-        const otherBooks = allBooks.filter(b => b._id !== currentBook._id);
-        const sameCategory = otherBooks.filter(b => b.category === currentBook.category);
-        const differentCategory = otherBooks.filter(b => b.category !== currentBook.category);
-        
-        const mixedSuggestions = [...sameCategory, ...differentCategory].slice(0, 4);
-        setSuggestions(mixedSuggestions);
-        
         setLoading(false);
+
+        // 2. Fetch saved status and suggestions in the background
+        const backgroundTasks = [];
+
+        if (token) {
+          backgroundTasks.push(
+            axios.get('/api/user/saved-books', { headers: { Authorization: `Bearer ${token}` } })
+              .then(res => setIsSaved(res.data.some(b => b._id === id)))
+              .catch(err => console.error("Saved books error", err))
+          );
+        }
+        
+        backgroundTasks.push(
+          axios.get(`/api/books`)
+            .then(res => {
+              const allBooks = res.data;
+              const otherBooks = allBooks.filter(b => b._id !== currentBook._id);
+              const sameCategory = otherBooks.filter(b => b.category === currentBook.category);
+              const differentCategory = otherBooks.filter(b => b.category !== currentBook.category);
+              setSuggestions([...sameCategory, ...differentCategory].slice(0, 4));
+            })
+            .catch(err => console.error("Suggestions error", err))
+        );
+
+        // Run both background tasks simultaneously
+        await Promise.all(backgroundTasks);
+        
       } catch (error) {
         console.error("Error fetching data:", error);
         setLoading(false);
       }
     };
+    
     fetchData();
   }, [id, token]);
 
@@ -71,7 +86,6 @@ function BookDetails() {
 
       setIsSaved(!isSaved);
 
-      // 🌟 REMOVED LOCALHOST
       await axios.post('/api/user/save-book', 
         { bookId: id }, 
         { headers: { Authorization: `Bearer ${token}` } }
@@ -82,6 +96,40 @@ function BookDetails() {
       alert("Something went wrong while saving. Please try again.");
     }
   };
+
+  const handlePayment = async () => {
+    if (!token) {
+      alert("Please log in to make a payment.");
+      navigate('/login');
+      return;
+    }
+
+    setPaymentLoading(true);
+    
+    try {
+      // 1. Ask the backend to create the checkout session
+      const response = await axios.post('/api/payment/create-checkout-session', {
+        book: book
+      });
+
+      // 2. Stripe gives us a secure URL inside response.data.url
+      const checkoutUrl = response.data.url;
+
+      // 3. 🌟 NEW STRIPE WAY: Just redirect the browser directly!
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        alert("Failed to get checkout URL from Stripe.");
+      }
+
+    } catch (err) {
+      console.error("Payment Error:", err);
+      alert("Failed to initialize payment. Please try again later.");
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
 
   if (loading) return <div className="text-center py-20 text-indigo-600 font-bold text-xl animate-pulse">Loading Book Details...</div>;
   if (!book) return <div className="text-center py-20 text-red-500 font-bold text-xl">Book not found.</div>;
@@ -183,27 +231,37 @@ function BookDetails() {
               </div>
             </div>
           ) : (
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3">
               <button 
-                onClick={() => setShowContact(true)} 
-                className="flex-grow bg-gray-900 hover:bg-black text-white font-semibold py-3 rounded-xl text-base transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                onClick={handlePayment} 
+                disabled={paymentLoading}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-base transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
               >
-                Contact Seller
+                {paymentLoading ? 'Redirecting to Checkout...' : `Pay securely with Stripe`}
               </button>
-              
-              <button 
-                onClick={handleToggleSave}
-                title={isSaved ? "Remove from Saved" : "Save for Later"}
-                className={`px-5 py-3 rounded-xl font-bold text-xl transition-all duration-300 shadow-sm flex items-center justify-center transform border ${
-                  isAnimating ? 'scale-125 rotate-12' : 'hover:-translate-y-0.5 active:scale-90'
-                } ${
-                  isSaved 
-                    ? 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100' 
-                    : 'bg-white border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200'
-                }`}
-              >
-                {isSaved ? '❤️' : '🤍'}
-              </button>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowContact(true)} 
+                  className="flex-grow bg-gray-900 hover:bg-black text-white font-semibold py-3 rounded-xl text-base transition-colors shadow-sm hover:shadow-md"
+                >
+                  Contact Seller
+                </button>
+                
+                <button 
+                  onClick={handleToggleSave}
+                  title={isSaved ? "Remove from Saved" : "Save for Later"}
+                  className={`px-5 py-3 rounded-xl font-bold text-xl transition-all duration-300 shadow-sm flex items-center justify-center transform border ${
+                    isAnimating ? 'scale-125 rotate-12' : 'hover:-translate-y-0.5 active:scale-90'
+                  } ${
+                    isSaved 
+                      ? 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100' 
+                      : 'bg-white border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200'
+                  }`}
+                >
+                  {isSaved ? '❤️' : '🤍'}
+                </button>
+              </div>
             </div>
           )}
         </div>

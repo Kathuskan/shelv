@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
-const passport = require('passport'); // 🌟 NEW: Import Passport
+const passport = require('passport');
 const sendEmail = require('./utils/sendEmail');
 
 // Models
@@ -19,16 +19,23 @@ const authRoutes = require('./routes/auth');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// --- 🌟 1. MIDDLEWARE (MUST GO FIRST) 🌟 ---
+// --- 🌟 1. WEBHOOK (MUST GO BEFORE express.json) 🌟 ---
+const webhookRoutes = require('./routes/webhook');
+app.use('/api/webhook', webhookRoutes);
+
+// --- 🌟 2. MIDDLEWARE 🌟 ---
 app.use(cors());
-app.use(express.json({ limit: '100mb' }));
+app.use(express.json({ limit: '100mb' })); // Now this won't break the webhook!
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
-// 🌟 NEW: Initialize Passport
+// Initialize Passport
 app.use(passport.initialize());
-
-// 🌟 NEW: Import and use the Passport Strategy Configuration
 require('./config/passport')(passport); 
+
+// --- 🌟 3. REST OF YOUR ROUTES 🌟 ---
+const paymentRoutes = require('./routes/payment');
+app.use('/api/payment', paymentRoutes);
+// ... the rest of your index.js code remains exactly the same
 
 // --- 🌟 2. ROUTES (MUST GO AFTER MIDDLEWARE) 🌟 ---
 app.use('/api/user', require('./routes/user'));

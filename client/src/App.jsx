@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 // 🌟 NEW: We import our custom axios file instead of the default one!
 import axios from './api/axios'; 
-
+import PaymentSuccess from './PaymentSuccess';
 import AddBook from './AddBook';
 import Login from './Login';
 import Admin from './Admin';
@@ -305,6 +305,7 @@ function App() {
           
           {/* 🌟 FIXED: Removed the invalid // comment syntax from inside the JSX routes */}
           <Route path="/social-success" element={<SocialSuccess />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
         </Routes>
       </div>
     </BrowserRouter>
