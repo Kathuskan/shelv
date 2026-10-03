@@ -46,8 +46,34 @@ function Shell() {
     <>
       <header className="site-header">
         <div className="nav">
-          <Link className="brand" to="/">
-            shelv<span> / books find a home</span>
+          <Link className="brand" to="/" aria-label="Shelv home">
+            <svg
+              className="brand-symbol"
+              viewBox="305 330 645 595"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <defs>
+                <filter id="shelv-brand-ink" colorInterpolationFilters="sRGB">
+                  <feColorMatrix
+                    in="SourceGraphic"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2 0 0 0 1.88"
+                    result="symbolMask"
+                  />
+                  <feFlood floodColor="currentColor" result="brandInk" />
+                  <feComposite in="brandInk" in2="symbolMask" operator="in" />
+                </filter>
+              </defs>
+              <image
+                href="/branding/shelv-symbol-shelf.png"
+                width="1254"
+                height="1254"
+                filter="url(#shelv-brand-ink)"
+              />
+            </svg>
+            <strong className="brand-wordmark">shelv</strong>
+            <span className="brand-tagline">books find a home</span>
           </Link>
           <nav aria-label="Main navigation">
             <Link to="/">Explore</Link>

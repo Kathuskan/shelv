@@ -10,7 +10,8 @@
     "test": "node --test test/*.test.js",
     "test:integration": "node --test test/orders.integration.test.js",
     "migrate:sales": "node scripts/migrate-sales.js",
-    "admin": "node scripts/admin.js"
+    "admin": "node scripts/admin.js",
+    "seed:demo": "node scripts/seed-demo.js"
   },
   "keywords": [],
   "author": "",

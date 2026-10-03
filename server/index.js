@@ -23,7 +23,9 @@ async function start() {
   const app = createApp(),
     stopWorker = startWorker(app);
   const server = app.listen(process.env.PORT || 5001, () =>
-    console.log("Shelv API ready")
+    console.log(
+      `Shelv API ready — database: ${mongoose.connection.name}, user collection: users`
+    )
   );
   async function stop() {
     stopWorker();

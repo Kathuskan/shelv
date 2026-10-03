@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="640" viewBox="0 0 440 640" role="img" aria-label="Demo cover: The Adventures of Sherlock Holmes">
+<rect width="440" height="640" rx="5" fill="#3d535b"/><rect x="8" width="12" height="640" fill="#000" opacity=".12"/><rect x="36" y="36" width="368" height="568" fill="none" stroke="#e3c68e" opacity=".6"/>
+<text x="220" y="95" text-anchor="middle" fill="#e3c68e" font-family="Arial,sans-serif" font-size="13" letter-spacing="4">SHELV • DEMO COLLECTION</text>
+<circle cx="220" cy="405" r="55" fill="none" stroke="#e3c68e" stroke-width="2" opacity=".5"/><path d="M184 406 Q204 390 220 406 Q236 390 256 406 L256 435 Q236 419 220 435 Q204 419 184 435 Z M220 406 V435" stroke="#e3c68e" fill="none" stroke-width="2"/>
+<text text-anchor="middle" fill="#e3c68e" font-family="Georgia,serif" font-size="37"><tspan x="220" y="240">The Adventures of</tspan><tspan x="220" y="300">Sherlock Holmes</tspan></text>
+<text x="220" y="535" text-anchor="middle" fill="#e3c68e" font-family="Arial,sans-serif" font-size="17">Arthur Conan Doyle</text><text x="220" y="575" text-anchor="middle" fill="#e3c68e" font-family="Arial,sans-serif" font-size="10" letter-spacing="2">SAMPLE BOOK COVER</text></svg>

@@ -102,7 +102,7 @@ export function AuthPage({ register = false }) {
       </form>
       {config?.googleLogin && (
         <a
-          className="button secondary full"
+          className="button secondary full google-signin"
           href={`${api.defaults.baseURL}/api/auth/google`}
         >
           Continue with Google

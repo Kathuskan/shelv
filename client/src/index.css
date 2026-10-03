@@ -84,17 +84,34 @@ form h2 {
   gap: 30px;
 }
 .brand {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 9px;
   font-size: 31px;
   font-weight: 800;
   letter-spacing: -1.6px;
   color: #4f427c;
 }
-.brand span {
+.brand-tagline {
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0;
   color: #82798c;
-  margin-left: 10px;
+  margin-left: 1px;
+}
+.brand-symbol {
+  display: block;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+.brand-wordmark {
+  font: inherit;
+}
+.google-signin {
+  margin: 2px;
+  width: calc(100% - 4px);
 }
 .nav nav {
   display: flex;
@@ -694,7 +711,7 @@ details form {
   gap: 15px;
 }
 @media (max-width: 1000px) {
-  .brand span {
+  .brand-tagline {
     display: none;
   }
   .nav {

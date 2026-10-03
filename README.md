@@ -16,6 +16,19 @@ Prerequisites: Node.js 22 LTS or newer and MongoDB Atlas or a MongoDB replica se
 
 `npm run build` builds the frontend. `npm run lint` checks the frontend. `npm test` runs business-rule tests and skips database integration when no test database is supplied.
 
+## Find users and add demo data
+
+MongoDB calls tables **collections**. User accounts are stored in the `users` collection inside the database selected by `MONGO_URI`. If the connection URI has no database path, MongoDB uses the `test` database. In Atlas, open the cluster → Browse Collections → `test` → `users` for that configuration. The API startup message also prints the active database name. To choose another database for a fresh environment, include its name in the URI path; changing it does not move existing accounts.
+
+Preview the demo seed, then add its sample data:
+
+```sh
+npm --prefix server run seed:demo
+npm --prefix server run seed:demo -- --apply
+```
+
+The seed adds five accounts (administrator, two approved sellers, buyer, and pending seller applicant) and ten new/used book listings with local sample cover images. It generates a random shared demo password and saves credentials in `server/.demo-credentials.json`, excluded from Git. Existing accounts, their passwords, and existing listing stock are preserved on repeat runs. Demo email addresses use the reserved `.example` domain, and the buyer's delivery address is fictional. Use them for local testing; they do not receive email. Sign in to the demo admin with `demo.admin@shelv.example` and the generated password from that file. The seed creates data only when passed `--apply` and uses the currently configured database.
+
 ## Delivery and payment flow
 
 - A checkout contains one listing and 1–20 copies from one seller. The buyer enters recipient, phone, street, optional landmark, city, district, postal code and optional instructions. This release serves Sri Lanka in LKR.
