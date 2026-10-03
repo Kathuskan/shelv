@@ -8,7 +8,7 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({ name: '', profilePicture: '' });
+  const [editData, setEditData] = useState(() => { const stored = JSON.parse(localStorage.getItem('user')) || {}; return { name: stored.name || '', profilePicture: stored.profilePicture || '' }; });
   const [updateLoading, setUpdateLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -22,8 +22,6 @@ function Profile() {
       return;
     }
 
-    // Set initial edit data
-    setEditData({ name: user.name, profilePicture: user.profilePicture || '' });
 
     const fetchSavedBooks = async () => {
       try {
@@ -39,7 +37,7 @@ function Profile() {
     };
 
     fetchSavedBooks();
-  }, [token, navigate, user.name, user.profilePicture]);
+  }, [token, navigate, user]);
 
   if (!user) return null;
 

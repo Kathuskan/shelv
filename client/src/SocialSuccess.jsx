@@ -1,33 +1,33 @@
-import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-
-function SocialSuccess() {
-    const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        const token = searchParams.get('token');
-        const user = searchParams.get('user');
-
-        if (token && user) {
-            // Save to localStorage just like a normal login
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', user);
-            
-            // Go to home and force a refresh to update the Navbar
-            window.location.href = '/'; 
-        } else {
-            navigate('/login');
-        }
-    }, [searchParams, navigate]);
-
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-            <h2 className="text-xl font-bold text-gray-800">Verifying with Google...</h2>
-            <p className="text-gray-500">You'll be redirected in just a moment.</p>
-        </div>
-    );
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import api, { message, saveSession } from "./core/api";
+export default function SocialSuccess() {
+  const [token] = useState(() =>
+      new URLSearchParams(window.location.hash.slice(1)).get("token")
+    ),
+    [error, setError] = useState("");
+  useEffect(() => {
+    window.history.replaceState(null, "", "/social-success");
+    if (!token) return;
+    api
+      .get("/api/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+        skipAuth: true,
+      })
+      .then(({ data }) => saveSession({ token, user: data }))
+      .catch((e) => setError(message(e)));
+  }, [token]);
+  return (
+    <section className="panel narrow">
+      <h1>Signing you in</h1>
+      {error || !token ? (
+        <p>
+          {error || "The sign-in link is invalid."}{" "}
+          <Link to="/login">Return to sign in</Link>
+        </p>
+      ) : (
+        <p>Please wait…</p>
+      )}
+    </section>
+  );
 }
-
-export default SocialSuccess;

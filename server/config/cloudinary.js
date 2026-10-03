@@ -16,7 +16,7 @@ const storage = new CloudinaryStorage({
     },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024, files: 5 }, fileFilter: (_req, file, cb) => cb(null, ['image/jpeg','image/png','image/webp'].includes(file.mimetype)) });
 
 // Add this to your existing server/config/cloudinary.js
 const profileStorage = new CloudinaryStorage({
@@ -28,6 +28,6 @@ const profileStorage = new CloudinaryStorage({
     },
 });
 
-const uploadProfile = multer({ storage: profileStorage });
+const uploadProfile = multer({ storage: profileStorage, limits: { fileSize: 5 * 1024 * 1024, files: 1 }, fileFilter: (_req, file, cb) => cb(null, ['image/jpeg','image/png','image/webp'].includes(file.mimetype)) });
 
 module.exports = { cloudinary, upload, uploadProfile }; // Export the new one

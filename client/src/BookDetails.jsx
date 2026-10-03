@@ -2,10 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from './api/axios'; 
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import BookCard from './BookCard';
-import { loadStripe } from '@stripe/stripe-js';
 
-// Initialize Stripe with your public key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK);
 
 function BookDetails() {
   const { id } = useParams();

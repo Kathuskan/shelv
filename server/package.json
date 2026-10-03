@@ -1,11 +1,16 @@
 {
   "name": "shelv-server",
   "version": "1.0.0",
-  "description": "Backend for Shelv book rental system",
+  "description": "Shelv new and used book sales marketplace",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "backend": "npx nodemon index.js"
+    "backend": "npx nodemon index.js",
+    "dev": "node --watch index.js",
+    "test": "node --test test/*.test.js",
+    "test:integration": "node --test test/orders.integration.test.js",
+    "migrate:sales": "node scripts/migrate-sales.js",
+    "admin": "node scripts/admin.js"
   },
   "keywords": [],
   "author": "",

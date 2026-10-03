@@ -1,6 +1,22 @@
 import { Link } from 'react-router-dom';
 
 function BookCard({ book, children }) {
+  
+  // 🌟 THE SPEED HACK: Automatically compress Cloudinary images on the fly
+  const getOptimizedImageUrl = (url) => {
+    if (!url) return 'https://via.placeholder.com/300x400?text=No+Cover';
+    
+    // Only apply the hack if it's an actual Cloudinary link
+    if (url.includes('cloudinary.com/')) {
+      return url.replace('/upload/', '/upload/w_400,q_auto,f_auto/');
+    }
+    return url;
+  };
+
+  const coverImage = book.images && book.images.length > 0 
+    ? getOptimizedImageUrl(book.images[0]) 
+    : 'https://via.placeholder.com/300x400?text=No+Cover';
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300 w-full h-full">
 
@@ -9,10 +25,11 @@ function BookCard({ book, children }) {
 
         {/* 1. The Image */}
         <div className="h-64 w-full bg-gray-50 flex-shrink-0 border-b border-gray-100 p-4 flex items-center justify-center">
-          {/* This grabs the very first image in the array safely */}
+          {/* 🌟 UPDATED: Uses the compressed image and ensures it fits the box perfectly */}
           <img
-            src={book.images && book.images.length > 0 ? book.images[0] : 'https://via.placeholder.com/300x400?text=No+Cover'}
+            src={coverImage}
             alt={book.title}
+            className="w-full h-full object-contain drop-shadow-sm"
           />
         </div>
 
@@ -29,7 +46,6 @@ function BookCard({ book, children }) {
           <h3 className="text-xl font-bold text-gray-900 mb-1 leading-tight">{book.title}</h3>
           <p className="text-gray-500 text-sm mb-4">by {book.author}</p>
 
-          {/* --- 🌟 ONLY THIS PRICE BLOCK WAS UPDATED 🌟 --- */}
           <div className="mt-auto pt-4 border-t border-gray-100 min-h-[4.5rem] flex flex-col justify-center">
             {book.listingType === 'Rent' ? (
               <div className="flex flex-col">
@@ -47,12 +63,10 @@ function BookCard({ book, children }) {
               <span className="text-2xl font-extrabold text-indigo-600">Rs {book.price}.00</span>
             )}
           </div>
-          {/* ----------------------------------------------- */}
-
         </div>
       </Link>
 
-      {/* 3. The Action Buttons (Kept OUTSIDE the Link so they don't trigger navigation!) */}
+      {/* 3. The Action Buttons */}
       {children && (
         <div className="px-6 pb-6 mt-auto">
           <div className="flex gap-2">

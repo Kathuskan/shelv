@@ -3,16 +3,23 @@ const mongoose = require('mongoose');
 const bookSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true },
     author: { type: String, required: true },
-    isbn: { type: String, required: true },
+    isbn: { type: String, default: '', trim: true },
     category: { type: String, required: true },
     description: { type: String, required: true },
-    contactEmail: { type: String, required: true },
-    contactPhone: { type: String, required: true },
+    contactEmail: { type: String, select: false },
+    contactPhone: { type: String, select: false },
+    stock: { type: Number, min: 0, default: 1 },
+    deliveryFee: { type: Number, min: 0, default: 0 },
+    status: { type: String, enum: ['active','archived'], default: 'active' },
+    language: { type: String, default: 'English' },
+    edition: { type: String, default: '' },
+    conditionNotes: { type: String, default: '' },
+    dispatchFrom: { type: String, default: '' },
 
     listingType: {
         type: String,
         required: true,
-        enum: ['Rent', 'Sale'],
+        enum: ['Sale'],
         default: 'Sale'
     },
 
@@ -24,9 +31,7 @@ const bookSchema = new mongoose.Schema({
     },
 
     // --- 🌟 UPDATED PRICING LOGIC ---
-    price: { type: Number, required: true }, // Used as Total Price OR Base Rent Price
-    rentalPeriod: { type: Number },          // e.g., 7 (days)
-    extraDayPrice: { type: Number },         // e.g., 50 (rupees per extra day)
+    price: { type: Number, required: true, min: 1 },
     // --------------------------------
 
     // The single, consolidated user reference

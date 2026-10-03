@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
 function ApplySeller() {
     const [step, setStep] = useState(1);
@@ -11,7 +10,6 @@ function ApplySeller() {
     // 🌟 Cooldown Timer State
     const [timer, setTimer] = useState(0);
 
-    const navigate = useNavigate();
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
 
@@ -38,7 +36,7 @@ function ApplySeller() {
             setStep(2);
             setTimer(60); // Start 60-second cooldown
             setLoading(false);
-        } catch (error) {
+        } catch {
             setError("Failed to send verification email. Please try again.");
             setLoading(false);
         }
@@ -56,7 +54,7 @@ function ApplySeller() {
             alert("Success! Your seller account is now active.");
             localStorage.setItem('user', JSON.stringify(response.data.updatedUser));
             window.location.href = '/my-listings';
-        } catch (error) {
+        } catch {
             setError(error.response?.data?.message || "Invalid or expired code.");
             setLoading(false);
         }

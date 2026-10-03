@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+// 🌟 FIX 1: Import your custom axios instance
+import axios from './api/axios'; 
 import { useNavigate, useParams } from 'react-router-dom';
 
 function EditBook() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // 1. Make sure image is in our initial state
   const [formData, setFormData] = useState({
     title: '', author: '', price: '', condition: 'New', listingType: 'Sale', image: ''
   });
@@ -17,17 +17,28 @@ function EditBook() {
   useEffect(() => {
     const fetchBook = async () => {
       try {
-        const response = await axios.get(`http://localhost:5001/api/books`);
-        const bookToEdit = response.data.find(b => b._id === id);
-        if (bookToEdit) {
-          setFormData(bookToEdit);
+        // 🌟 FIX 2: Fetch ONLY the one specific book, not the whole database!
+        const response = await axios.get(`http://localhost:5001/api/books/${id}`);
+        
+        if (response.data) {
+          // If the book uses the new 'images' array, grab the first one for the preview
+          const currentImage = response.data.images && response.data.images.length > 0 
+            ? response.data.images[0] 
+            : response.data.image;
+
+          setFormData({
+            ...response.data,
+            image: currentImage || ''
+          });
         }
         setLoading(false);
       } catch (error) {
         console.error("Error fetching book:", error);
         setLoading(false);
+        alert("Could not load book details.");
       }
     };
+    
     fetchBook();
   }, [id]);
 
@@ -35,7 +46,6 @@ function EditBook() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 2. The Base64 Image Converter
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -50,18 +60,19 @@ function EditBook() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:5001/api/seller/books/${id}`, formData, {
+      // 🌟 FIX 3: Removed hardcoded localhost
+      await axios.put(`/api/seller/books/${id}`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Book updated successfully!');
-      navigate('/my-listings');
+      navigate('/seller-dashboard'); // Redirecting to the dashboard makes more sense here
     } catch (error) {
       alert('Failed to update book.');
       console.error(error);
     }
   };
 
-  if (loading) return <div className="text-center py-20 font-bold text-indigo-600">Loading Book Data...</div>;
+  if (loading) return <div className="text-center py-20 font-bold text-indigo-600 animate-pulse">Loading Book Data...</div>;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -69,14 +80,12 @@ function EditBook() {
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
 
-        {/* 3. The Image Upload Section */}
         <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
           <label className="block text-sm font-bold text-gray-700 mb-2">Update Cover Image (Optional)</label>
           <input
             type="file"
             accept="image/*"
             onChange={handleImageUpload}
-            // Notice: NO 'required' attribute here!
             className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer outline-none"
           />
           {formData.image && (
@@ -96,7 +105,7 @@ function EditBook() {
           <label className="block text-sm font-bold text-gray-700 mb-2">Author</label>
           <input type="text" name="author" value={formData.author} onChange={handleChange} required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" />
         </div>
-        {/* UPDATED: Official Category Dropdown */}
+        
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Book Category</label>
           <select
@@ -118,15 +127,13 @@ function EditBook() {
             <option value="Science & Technology">Science & Technology</option>
           </select>
         </div>
-        <div>
 
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Condition</label>
-            <select name="condition" value={formData.condition} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none">
-              <option value="New">New</option>
-              <option value="Used">Used</option>
-            </select>
-          </div>
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Condition</label>
+          <select name="condition" value={formData.condition} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none">
+            <option value="New">New</option>
+            <option value="Used">Used</option>
+          </select>
         </div>
 
         <div>
@@ -136,16 +143,14 @@ function EditBook() {
             <option value="Rent">For Rent</option>
           </select>
         </div>
-        {/* --- 🌟 DYNAMIC PRICING UI --- */}
+        
         {formData.listingType === 'Sale' ? (
-          // IF SALE: Show standard single price
           <div className="col-span-1 md:col-span-2">
             <label className="block text-sm font-semibold text-gray-700 mb-2">Selling Price (Rs)</label>
             <input type="number" name="price" min="0" step="1" value={formData.price} onChange={handleChange} required
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. 1500" />
           </div>
         ) : (
-          // IF RENT: Show the 3-part package builder
           <div className="col-span-1 md:col-span-2 bg-indigo-50 p-6 rounded-xl border border-indigo-100 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-3">
               <h4 className="text-sm font-bold text-indigo-900 mb-1">Rental Package Details</h4>
@@ -154,7 +159,7 @@ function EditBook() {
 
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-2">Base Period (Days)</label>
-              <input type="number" name="rentalPeriod" min="1" value={formData.rentalPeriod} onChange={handleChange} required
+              <input type="number" name="rentalPeriod" min="1" value={formData.rentalPeriod || ''} onChange={handleChange} required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. 7" />
             </div>
             <div>
@@ -164,12 +169,12 @@ function EditBook() {
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-2">Extra Day Charge (Rs)</label>
-              <input type="number" name="extraDayPrice" min="0" value={formData.extraDayPrice} onChange={handleChange} required
+              <input type="number" name="extraDayPrice" min="0" value={formData.extraDayPrice || ''} onChange={handleChange} required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-600 outline-none" placeholder="e.g. 50" />
             </div>
           </div>
         )}
-        {/* -------------------------------- */}
+        
         <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md">
           Save Changes
         </button>

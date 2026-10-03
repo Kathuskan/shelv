@@ -1,11 +1,10 @@
 import { useState } from 'react';
 // 🌟 NEW: Import your custom axios instance
 import axios from './api/axios'; 
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const navigate = useNavigate();
 
   // 🌟 NEW: We grab the live URL (if hosted) or fall back to localhost
   const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
