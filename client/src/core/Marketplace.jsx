@@ -9,6 +9,7 @@ import api, { money, message } from "./api";
 import useResource from "./useResource";
 import { SaveBook } from "./SavedBooks";
 import { ErrorMessage, Field, Loading } from "./Common";
+import Recommendations from "./Recommendations";
 function Cover({ book }) {
   const src = book.images?.[0];
   return src ? (
@@ -29,9 +30,9 @@ function Cover({ book }) {
     </div>
   );
 }
-function BookTile({ book }) {
+function BookTile({ book, onClick }) {
   return (
-    <Link className="book-tile" to={`/book/${book._id}`}>
+    <Link className="book-tile" to={`/book/${book._id}`} onClick={onClick}>
       <div className="cover-wrap">
         <Cover book={book} />
         <span className="badge cover-badge">{book.condition}</span>
@@ -48,7 +49,7 @@ function BookTile({ book }) {
     </Link>
   );
 }
-export function Home() {
+export function Home({ user }) {
   const [params, setParams] = useSearchParams(),
     q = params.get("q") || "",
     condition = params.get("condition") || "",
@@ -104,6 +105,7 @@ export function Home() {
           </div>
         </div>
       </section>
+      {user && <Recommendations key={user.id || user._id} Card={BookTile} />}
       <section id="browse">
         <div className="page-heading">
           <div>

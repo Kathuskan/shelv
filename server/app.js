@@ -9,6 +9,8 @@ const Order = require("./models/Order");
 const Review = require("./models/Review");
 const auth = require("./middleware/authMiddleware");
 const rateLimit = require("./lib/rateLimit");
+const discoveryRouter = require("./routes/discovery");
+const discovery = require("./services/discovery");
 const v = require("./lib/validation");
 const createOrders = require("./services/orders");
 const createGateway = require("./services/gateway");
@@ -117,6 +119,7 @@ function createApp({ gateway = createGateway(), mail = sendEmail } = {}) {
     })
   );
   app.use(express.json({ limit: "64kb" }));
+  app.use("/api/v1", discoveryRouter());
   app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
   app.get("/api/config", (_req, res) =>
     res.json({
@@ -293,10 +296,7 @@ function createApp({ gateway = createGateway(), mail = sendEmail } = {}) {
     "/api/user/saved-books/:id",
     auth,
     route(async (req, res) => {
-      await User.updateOne(
-        { _id: req.user.id },
-        { $pull: { savedBooks: v.id(req.params.id) } }
-      );
+      await discovery.removeBookmark(req.user.id, v.id(req.params.id));
       res.json({ saved: false });
     })
   );

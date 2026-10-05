@@ -11,7 +11,14 @@
     "test:integration": "node --test test/orders.integration.test.js",
     "migrate:sales": "node scripts/migrate-sales.js",
     "admin": "node scripts/admin.js",
-    "seed:demo": "node scripts/seed-demo.js"
+    "seed:demo": "node scripts/seed-demo.js",
+    "learn:recommendations": "node scripts/recommendations-lesson.js",
+    "learn:content": "node scripts/recommendations-content-lesson.js",
+    "learn:profile": "node scripts/recommendations-profile-lesson.js",
+    "learn:cold-start": "node scripts/recommendations-cold-start-lesson.js",
+    "learn:evaluate": "node scripts/recommendations-evaluation-lesson.js",
+    "learn:explore": "node scripts/recommendations-exploration-lesson.js",
+    "learn:feedback": "node scripts/recommendations-feedback-lesson.js"
   },
   "keywords": [],
   "author": "",

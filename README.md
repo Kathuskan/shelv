@@ -102,6 +102,13 @@ Validation on this implementation pass: production build and frontend lint passe
 
 ## Code map and boundaries
 
+The first persistent discovery backend is now available behind authenticated,
+explicit opt-in routes. See the [event API guide](docs/shelv-sales-blueprint/02-recommendation-engine/event-api.md)
+for preferences, recommendation snapshots, event ingestion, reset and verification.
+The homepage offers signed-in readers an opt-in suggestions section with save,
+dismiss, refresh and turn-off controls; the live endpoint uses a newest-first baseline.
+The offline recommendation lessons remain available separately.
+
 - `client/src/App.jsx` and `client/src/core/`: active sales-only screens and API helpers.
 - `server/app.js`: testable HTTP application; authentication, catalogue, order and administration routes.
 - `server/services/orders.js`: transactional inventory, order lifecycle, payment confirmation and refunds.

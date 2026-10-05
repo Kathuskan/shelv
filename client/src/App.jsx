@@ -104,7 +104,7 @@ function Shell() {
       </header>
       <main className="container">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home user={user} />} />
           <Route path="/book/:id" element={<BookPage user={user} />} />
           <Route path="/login" element={<AuthPage key="login" />} />
           <Route

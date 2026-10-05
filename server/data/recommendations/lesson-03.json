@@ -1,0 +1,11 @@
+{
+  "description": "Fictional content-similarity lesson. The source book is an explicit example choice, not an inferred reader preference.",
+  "sourceListingId": "000000000000000000000001",
+  "additionalListings": [
+    { "_id": "000000000000000000000005", "title": "The Moonlit Archive", "author": "Mira Sen", "category": "Fantasy", "language": "English", "listingType": "Sale", "status": "active", "stock": 2 },
+    { "_id": "000000000000000000000006", "title": "The Glass Dragon", "author": "Arun Vale", "category": "Fantasy", "language": "English", "listingType": "Sale", "status": "active", "stock": 1 },
+    { "_id": "000000000000000000000007", "title": "A Writer's Notebook", "author": "Mira Sen", "category": "Nonfiction", "language": "English", "listingType": "Sale", "status": "active", "stock": 3 },
+    { "_id": "000000000000000000000008", "title": "The Hidden Kingdom", "author": "Mira Sen", "category": "Fantasy", "language": "English", "listingType": "Sale", "status": "active", "stock": 0 },
+    { "_id": "000000000000000000000009", "title": "The Glass Dragon — Tamil Edition", "author": "Arun Vale", "category": "Fantasy", "language": "Tamil", "listingType": "Sale", "status": "active", "stock": 2 }
+  ]
+}

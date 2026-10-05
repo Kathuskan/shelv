@@ -1,0 +1,12 @@
+{
+  "description": "Fictional reader explicitly opting into this offline personalization exercise. Saved IDs are teaching inputs, not real behavior.",
+  "reader": {
+    "savedListingIds": ["000000000000000000000001", "000000000000000000000002"],
+    "languages": ["English"],
+    "dismissedListingIds": []
+  },
+  "additionalListings": [
+    { "_id": "000000000000000000000010", "title": "The Orbit Orchard", "author": "Dev Arun", "category": "Science Fiction", "language": "English", "listingType": "Sale", "status": "active", "stock": 2 },
+    { "_id": "000000000000000000000011", "title": "Signals from Europa", "author": "Leela Ray", "category": "Science Fiction", "language": "English", "listingType": "Sale", "status": "active", "stock": 1 }
+  ]
+}

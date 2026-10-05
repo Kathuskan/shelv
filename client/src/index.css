@@ -323,6 +323,10 @@ main.container {
   background: #f8f7fa;
   color: #847d8d;
 }
+.recommendations { margin: 2rem 0 3rem; }
+.recommendation-card { min-width: 0; }
+.recommendation-actions { padding: 0.75rem 0; display: grid; gap: 0.5rem; }
+.recommendation-buttons { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
 .book-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -1,0 +1,25 @@
+{
+  "description": "Manually authored fictional relevance judgments for teaching, not observed preferences or a held-out evaluation dataset. Unlisted books receive zero credit only within this exercise.",
+  "cases": [
+    {
+      "name": "Fantasy interest",
+      "reader": { "savedListingIds": ["000000000000000000000001"], "languages": ["English"], "dismissedListingIds": [] },
+      "relevantListingIds": ["000000000000000000000005", "000000000000000000000006"]
+    },
+    {
+      "name": "Science-fiction interest",
+      "reader": { "savedListingIds": ["000000000000000000000002"], "languages": ["English"], "dismissedListingIds": [] },
+      "relevantListingIds": ["000000000000000000000010", "000000000000000000000011"]
+    },
+    {
+      "name": "Interests changed since saving",
+      "reader": { "savedListingIds": ["000000000000000000000001"], "languages": ["English"], "dismissedListingIds": [] },
+      "relevantListingIds": ["000000000000000000000002", "000000000000000000000010"]
+    },
+    {
+      "name": "New reader",
+      "reader": { "savedListingIds": [], "languages": ["English"], "dismissedListingIds": [] },
+      "relevantListingIds": ["000000000000000000000003", "000000000000000000000002"]
+    }
+  ]
+}
